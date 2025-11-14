@@ -72,7 +72,7 @@ function App() {
 
   const [dayModalOpen, setDayModalOpen] = useState(false);
  
-  useDailyNotification();
+ 
 
   useEffect(() => {
     let mounted = true;
