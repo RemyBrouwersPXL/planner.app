@@ -33,7 +33,10 @@ function App() {
   function normalizeDate(date) {
   if (!date) return null;
   return new Date(date).toISOString().split("T")[0]; // 'YYYY-MM-DD'
-}
+  }
+
+  
+
 
 
   requestPermission();
@@ -130,22 +133,19 @@ function App() {
   }, [currentWeekKey]);
 
   useEffect(() => {
-    if (!selectedDay) return;
-    let mounted = true;
-    async function loadDay() {
-      try {
-        const data = await getDayGoals(normalizeDate(selectedDay));
-        if (!mounted) return;
-        setDayGoals((prev) => ({ ...prev, [normalizeDate(selectedDay)]: Array.isArray(data) ? data : [] }));
-      } catch (err) {
-        console.error("Kon dagdoelen niet laden:", err);
-      }
+  if (!selectedDay) return;
+  const normalizedDay = normalizeDate(selectedDay);
+  async function loadDay() {
+    try {
+      const data = await getDayGoals(normalizedDay);
+      console.log("dayGoals fetched:", normalizedDay, data); // << debug
+      setDayGoals((prev) => ({ ...prev, [normalizedDay]: Array.isArray(data) ? data : [] }));
+    } catch (err) {
+      console.error("Kon dagdoelen niet laden:", err);
     }
-    loadDay();
-    return () => {
-      mounted = false;
-    };
-  }, [selectedDay]);
+  }
+  loadDay();
+}, [selectedDay]);
 
   // 🗓 Weeknavigatie
   const previousWeek = useCallback(() => {
