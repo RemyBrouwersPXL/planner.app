@@ -295,7 +295,7 @@ sx={{
         <WeekPlanner
           weekGoals={weekGoals}
           onUpdateGoal={updateWeekGoalHandler}
-          onDeleteGoal={deleteWeekGoalHandler}
+          onDeleteGoal={deleteDayGoalHandler}
 
           openModal={()=>{ setModalEditGoal(null); setModalOpen(true); }}
         />

@@ -19,17 +19,22 @@ export async function addWeekGoal(goal) {
 }
 
 export async function deleteWeekGoal(id) {
-  const { data, error} = await supabase.from('week_goals').deleteWeekGoal(id)
+  const { data, error } = await supabase
+    .from('week_goals')
+    .delete()
+    .eq('id', id); // selecteer de juiste rij via id
   if (error) throw error;
   return data;
-  
 }
 
+// Verwijder een dagdoel
 export async function deleteDayGoal(id) {
-  const { data, error} = await supabase.from('dag_goals').deleteDagGoal(id)
+  const { data, error } = await supabase
+    .from('day_goals') // let op: 'day_goals' ipv 'dag_goals'
+    .delete()
+    .eq('id', id);
   if (error) throw error;
   return data;
-  
 }
 
 // Day Goals
