@@ -1,51 +1,35 @@
 import React, { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  TextField,
-  Button,
-  MenuItem,
-  useTheme,
-} from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, TextField, Button, MenuItem } from "@mui/material";
 
 function Modal({ open, onClose, onSave, editGoal }) {
-  const theme = useTheme();
-  const [title, setTitle] = useState(editGoal?.title || "");
-  const [description, setDescription] = useState(editGoal?.description || "");
-  const [priority, setPriority] = useState(editGoal?.priority || "Normaal");
+  const [title, setTitle] = useState("");
+  const [priority, setPriority] = useState("Normaal");
 
   useEffect(() => {
-    setTitle(editGoal?.title || "");
-    setDescription(editGoal?.description || "");
-    setPriority(editGoal?.priority || "Normaal");
+    if (editGoal) {
+      setTitle(editGoal.title);
+      setPriority(editGoal.priority);
+    } else {
+      setTitle("");
+      setPriority("Normaal");
+    }
   }, [editGoal]);
 
   const handleSave = () => {
     if (!title.trim()) return;
-    onSave({ title, priority, completed: false });
+    onSave({ ...editGoal, title, priority, completed: editGoal?.completed || false });
     setTitle("");
     setPriority("Normaal");
   };
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle
-        sx={{
-          fontWeight: "bold",
-          background: `linear-gradient(90deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          textAlign: "center",
-        }}
-      >
-        Nieuw doel toevoegen
-      </DialogTitle>
+      <DialogTitle>{editGoal ? "Doel bewerken" : "Nieuw doel"}</DialogTitle>
       <DialogContent>
         <TextField
           label="Titel"
           fullWidth
-          sx={{ mb: 2 }}
+          margin="normal"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
@@ -53,7 +37,7 @@ function Modal({ open, onClose, onSave, editGoal }) {
           select
           label="Prioriteit"
           fullWidth
-          sx={{ mb: 2 }}
+          margin="normal"
           value={priority}
           onChange={(e) => setPriority(e.target.value)}
         >
@@ -62,17 +46,10 @@ function Modal({ open, onClose, onSave, editGoal }) {
           <MenuItem value="Laag">Laag</MenuItem>
         </TextField>
         <Button
-          onClick={handleSave}
           variant="contained"
-          sx={{
-            mt: 2,
-            borderRadius: "50px",
-            background: `linear-gradient(45deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
-            color: "#fff",
-            "&:hover": {
-              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-            },
-          }}
+          color="primary"
+          onClick={handleSave}
+          sx={{ mt: 2, width: "100%" }}
         >
           Opslaan
         </Button>

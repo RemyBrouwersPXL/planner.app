@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, Typography, Fab, Box, LinearProgress } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 
-function WeekPlanner({ weekGoals, toggleComplete, deleteWeekGoal, openModal }) {
+function WeekPlanner({ weekGoals, onAddGoal, onUpdateGoal, onDeleteGoal, openModal }) {
   const completedCount = weekGoals.filter((g) => g.completed).length;
   const progress = (completedCount / (weekGoals.length || 1)) * 100;
 
@@ -85,8 +85,8 @@ function WeekPlanner({ weekGoals, toggleComplete, deleteWeekGoal, openModal }) {
                   color: "#fff",
                   "&:hover": { boxShadow: "0 0 15px #00F5FF" },
                 }}
-                onClick={() => toggleComplete(goal.id)}
-              >
+                onClick={() => onUpdateGoal(goal.id, { completed: !goal.completed })}>
+              
                 ✓
               </Fab>
               <Fab
@@ -96,10 +96,13 @@ function WeekPlanner({ weekGoals, toggleComplete, deleteWeekGoal, openModal }) {
                   color: "#fff",
                   "&:hover": { boxShadow: "0 0 15px #FF6B6B" },
                 }}
-                onClick={() => deleteWeekGoal(goal.id)}
+                onClick={() => onDeleteGoal(goal.id)}
               >
                 ✕
               </Fab>
+              
+
+
             </Box>
           </Card>
         ))}

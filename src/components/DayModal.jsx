@@ -21,8 +21,8 @@ function DayModal({
   dayKey,
   dayGoals,
   toggleDayComplete,
-  deleteDayGoal,
-  editDayGoal,
+  onDeleteGoal,
+  openEditGoalModal,
   openAddGoalModal,
 }) {
   const theme = useTheme();
@@ -106,13 +106,13 @@ function DayModal({
                   variant="contained"
                   color="primary"
                   startIcon={<EditIcon />}
-                  onClick={() => editDayGoal(goal)}
+                  onClick={() => openEditGoalModal(goal)}
                 />
                 <Button
                   variant="contained"
                   color="error"
                   startIcon={<DeleteIcon />}
-                  onClick={() => deleteDayGoal(dayKey, goal.id)}
+                  onClick={() => onDeleteGoal(goal.id)}
                 />
               </Stack>
             </Box>

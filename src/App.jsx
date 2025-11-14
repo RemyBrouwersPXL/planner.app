@@ -6,6 +6,8 @@ import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
+import { messaging } from './firebase';
+import { getToken, onMessage } from "firebase/messaging";
 
 import WeekPlanner from "./components/WeekPlanner";
 import DagPlanner from "./components/DagPlanner";
@@ -13,56 +15,105 @@ import Modal from "./components/Modal";
 import DayModal from "./components/DayModal";
 import theme from "./theme"
 
+import {
+  getWeekGoals, addWeekGoal, updateWeekGoal, deleteWeekGoal,
+  getDayGoals, addDayGoal, updateDayGoal, deleteDayGoal
+} from './services/goalsService';
+
 function App() {
+  async function requestPermission() {
+    const permission = await Notification.requestPermission();
+    if(permission === 'granted'){
+    const token = await getToken(messaging, { vapidKey: "VAPID_KEY_HIER" });
+    console.log("FCM Token:", token);
+    // Stuur token naar jouw backend of Supabase
+    }
+  }
+
+  requestPermission();
+
+// Ontvang realtime berichten
+  onMessage(messaging, (payload) => {
+    console.log('Message received: ', payload);
+  });
+
+  function useDailyNotification() {
+    useEffect(() => {
+      // Controleer of browser notificaties ondersteunt
+      if (!("Notification" in window)) return;
+
+      // Vraag toestemming bij eerste keer openen
+      if (Notification.permission !== "granted") {
+        Notification.requestPermission();
+      }
+
+      // Functie om te checken of het 20:00 is en een notificatie te sturen
+      const checkTime = () => {
+        const now = new Date();
+        if (now.getHours() === 20 && now.getMinutes() === 0) {
+          new Notification("Dagelijkse check", {
+            body: "Heb je je doelen van vandaag voltooid?",
+          });
+        }
+      };
+
+      // Check elke minuut
+      const interval = setInterval(checkTime, 60000);
+
+      return () => clearInterval(interval); // cleanup bij unmount
+    }, []);
+  }
+
   // 🌙 Dark mode
-  const [darkMode, setDarkMode] = useState(false);
+  useDailyNotification();
   
-  
-
-  // 📅 Huidige week start (maandag)
-  const [currentWeekStart, setCurrentWeekStart] = useState(() => {
+  function getCurrentWeekKey() {
     const today = new Date();
-    const day = today.getDay();
-    const monday = new Date(today);
-    monday.setDate(today.getDate() - (day === 0 ? 6 : day - 1));
-    return monday;
-  });
+    const year = today.getFullYear();
+    const weekNumber = Math.ceil((((today - new Date(year, 0, 1)) / 86400000) + new Date(year, 0, 1).getDay() + 1) / 7);
+    return `${year}-W${weekNumber}`;
+  }
 
-  // 🎯 State: week- en dagdoelen (per week)
-  const [weekGoals, setWeekGoals] = useState(() => {
-    const stored = localStorage.getItem("weekGoals");
-    return stored ? JSON.parse(stored) : {};
-  });
-  const [dayGoals, setDayGoals] = useState(() => {
-    const stored = localStorage.getItem("dayGoals");
-    return stored ? JSON.parse(stored) : {};
-  });
-
-  // 📝 Modal
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalContext, setModalContext] = useState({ type: "", date: null });
-
-  const [dayModalOpen, setDayModalOpen] = useState(false);
+const [weekGoals, setWeekGoals] = useState([]);
+  const [dayGoals, setDayGoals] = useState([]);
+  const [currentWeekKey, setCurrentWeekKey] = useState(getCurrentWeekKey());
   const [selectedDay, setSelectedDay] = useState(null);
 
 
-  // ⏳ Opslaan in LocalStorage
-  useEffect(() => {
-    localStorage.setItem("weekGoals", JSON.stringify(weekGoals));
-  }, [weekGoals]);
+ 
 
-  useEffect(() => {
-    localStorage.setItem("dayGoals", JSON.stringify(dayGoals));
-  }, [dayGoals]);
+
+  // 📝 Modal
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalEditGoal, setModalEditGoal] = useState(null);
+
+  const [dayModalOpen, setDayModalOpen] = useState(false);
+ 
+
+
+  useEffect(()=>{
+    async function fetchWeekGoals(){ setWeekGoals(await getWeekGoals(currentWeekKey.toISOString().split("T")[0])); }
+    fetchWeekGoals();
+  }, [currentWeekKey]);
+
+  useEffect(()=>{
+    if(selectedDay){
+      async function fetchDayGoals(){
+        const data = await getDayGoals(selectedDay);
+        setDayGoals(prev => ({...prev, [selectedDay]: data}));
+      }
+      fetchDayGoals();
+    }
+  }, [selectedDay]);
 
   // 🗓 Weeknavigatie
   const previousWeek = () => {
-    const prev = new Date(currentWeekStart);
+    const prev = new Date(currentWeekKey);
     prev.setDate(prev.getDate() - 7);
     setCurrentWeekStart(prev);
   };
   const nextWeek = () => {
-    const next = new Date(currentWeekStart);
+    const next = new Date(currentWeekKey);
     next.setDate(next.getDate() + 7);
     setCurrentWeekStart(next);
   };
@@ -74,107 +125,23 @@ function App() {
     setCurrentWeekStart(monday);
   };
 
-  const getWeekKey = (date) => {
-    return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-  };
-
-  const currentWeekKey = getWeekKey(currentWeekStart);
-
-  // 🎯 Weekdoelen functies
-  const addWeekGoal = (goal) => {
-  setWeekGoals((prev) => {
-    const updated = { ...prev };
-
-    if (!updated[currentWeekKey]) updated[currentWeekKey] = [];
-
-    updated[currentWeekKey].push({
-      id: Date.now().toString(),
-      title: goal.title,
-      description: goal.description,
-      priority: goal.priority || "Normaal",
-      completed: false,
-    });
-
-    // Sla alleen non-empty arrays op
-    Object.keys(updated).forEach((key) => {
-      if (updated[key].length === 0) delete updated[key];
-    });
-
-    
-    return updated;
-  });
-};
-
-  const toggleWeekComplete = (goalId) => {
-    setWeekGoals((prev) => {
-      const updated = { ...prev };
-      updated[currentWeekKey] = updated[currentWeekKey].map((g) =>
-        g.id === goalId ? { ...g, completed: !g.completed } : g
-      );
-      return updated;
-    });
-  };
-
-  const deleteWeekGoal = (goalId) => {
-  setWeekGoals((prev) => {
-    const updated = { ...prev };
-    
-    updated[currentWeekKey] = updated[currentWeekKey].filter((g) => g.id !== goalId);
-
-    // Verwijder lege weken
-    if (updated[currentWeekKey].length === 0) delete updated[currentWeekKey];
-
-    
-    return updated;
-  });
-};
-
-  // 🎯 Dagdoelen functies
-  const addDayGoal = (date, goal) => {
-    setDayGoals((prev) => {
-      const updatedGoals = { ...prev };
-
-      if (!updatedGoals[date]) updatedGoals[date] = [];
+  
 
 
-      updatedGoals[date].push({
-      id: Date.now().toString(),
-      title: goal.title,
-      description: goal.description,
-      priority: goal.priority || "Normaal",
-      completed: false,
-    });
 
+  const handleAddWeekGoal = async(goal)=>{ const data = await addWeekGoal(goal); setWeekGoals(prev=>[...prev,...data]); }
+  const handleUpdateWeekGoal = async(id, updates)=>{ await updateWeekGoal(id, updates); setWeekGoals(prev=>prev.map(g=>g.id===id?{...g,...updates}:g)); }
+  const handleDeleteWeekGoal = async(id)=>{ await deleteWeekGoal(id); setWeekGoals(prev=>prev.filter(g=>g.id!==id)); }
 
-    Object.keys(updatedGoals).forEach((key) => {
-      if (updatedGoals[key].length === 0) delete updatedGoals[key];
-    });     
-      
-      return updatedGoals;
-    });
-  };
+  const handleAddDayGoal = async(goal)=>{ const data = await addDayGoal(goal); setDayGoals(prev=>({...prev, [selectedDay]: [...(prev[selectedDay]||[]), ...data]})); }
+  const handleUpdateDayGoal = async(id, updates)=>{ await updateDayGoal(id, updates); setDayGoals(prev=>({...prev, [selectedDay]: prev[selectedDay].map(g=>g.id===id?{...g,...updates}:g)})); }
+  const handleDeleteDayGoal = async(id)=>{ await deleteDayGoal(id); setDayGoals(prev=>({...prev, [selectedDay]: prev[selectedDay].filter(g=>g.id!==id)})); }
 
-  const toggleDayComplete = (date, goalId) => {
-    setDayGoals((prev) => {
-      const updated = { ...prev };
-      updated[date] = updated[date].map((g) =>
-        g.id === goalId ? { ...g, completed: !g.completed } : g
-      );
-      return updated;
-    });
-  };
+  const toggleDayComplete = (dayKey, id)=>{
+    const goal = dayGoals[dayKey].find(g=>g.id===id);
+    handleUpdateDayGoal(id, {completed: !goal.completed});
+  }
 
-  const deleteDayGoal = (date, goalId) => {
-    setDayGoals((prev) => {
-      const updated = { ...prev };
-      updated[date] = updated[date].filter((g) => g.id !== goalId);
-
-      if (updated[date].length === 0) {
-      delete updated[date];
-    }
-      return updated;
-    });
-  };
 
 
 
@@ -250,61 +217,31 @@ sx={{
 
         {/* WeekPlanner */}
         <WeekPlanner
-          weekGoals={weekGoals[currentWeekKey] || []}
-          toggleComplete={toggleWeekComplete}
-          deleteWeekGoal={deleteWeekGoal}
-          openModal={() => {
-            setModalContext({ type: "week" });
-            setModalOpen(true);
-          }}
+          weekGoals={weekGoals}
+          onUpdateGoal={handleUpdateWeekGoal}
+          onDeleteGoal={handleDeleteWeekGoal}
+
+          openModal={()=>{ setModalEditGoal(null); setModalOpen(true); }}
         />
 
         {/* DagPlanner */}
         <DagPlanner
-          currentWeekStart={currentWeekStart}
+          currentWeekStart={currentWeekKey}
           dayGoals={dayGoals}
-          openDayModal={(dayKey) => { setSelectedDay(dayKey); setDayModalOpen(true); }}
+          openDayModal={(dayKey)=>{ setSelectedDay(dayKey); setDayModalOpen(true); }}
+          openModal={(dayKey)=>{ setSelectedDay(dayKey); setModalEditGoal(null); setModalOpen(true); }}
         />
 
         {/* Modal */}
         <Modal
           open={modalOpen}
-          onClose={() => setModalOpen(false)}
-          onSave={(goal) => {
-            if (modalContext.type === "week") {
-              if (modalContext.editGoal) {
-                // Bewerken van bestaande weekdoel
-                setWeekGoals(prev => {
-                  const updated = { ...prev };
-                  updated[currentWeekKey] = updated[currentWeekKey].map(g =>
-                    g.id === modalContext.editGoal.id ? { ...g, ...goal } : g
-                  );
-                  return updated;
-                });
-              } else {
-                addWeekGoal(goal);
-              }
-            }
-
-            if (modalContext.type === "day") {
-              if (modalContext.editGoal) {
-                // Bewerken van bestaande dagdoel
-                setDayGoals(prev => {
-                  const updated = { ...prev };
-                  updated[modalContext.date] = updated[modalContext.date].map(g =>
-                    g.id === modalContext.editGoal.id ? { ...g, ...goal } : g
-                  );
-                  return updated;
-                });
-              } else {
-                addDayGoal(modalContext.date, goal);
-              }
-            }
-
+          onClose={()=>setModalOpen(false)}
+          onSave={(goal)=>{
+            if(selectedDay){ handleAddDayGoal({...goal, date:selectedDay}) }
+            else{ handleAddWeekGoal({...goal, week_key: currentWeekKey.toISOString().split("T")[0]}) }
             setModalOpen(false);
-            setModalContext({ type: "", date: null });
           }}
-          editGoal={modalContext.editGoal || null}
+          editGoal={modalEditGoal}
         />
 
         
@@ -314,15 +251,10 @@ sx={{
           dayKey={selectedDay}
           dayGoals={dayGoals[selectedDay] || []}
           toggleDayComplete={toggleDayComplete}
-          deleteDayGoal={deleteDayGoal}
-          editDayGoal={(goal) => { 
-              setModalContext({ type: "day", date: selectedDay, editGoal: goal }); 
-              setModalOpen(true); 
-          }}
-          openAddGoalModal={(dayKey) => {
-              setModalContext({ type: "day", date: dayKey }); 
-              setModalOpen(true);
-          }}
+          onDeleteGoal={handleDeleteDayGoal}
+          openAddGoalModal={(dayKey)=>{ setSelectedDay(dayKey); setModalOpen(true); }}
+          openEditGoalModal={(goal)=>{ setSelectedDay(goal.date); setModalEditGoal(goal); setModalOpen(true); }}
+        
         />
 
       </Container>
