@@ -6,6 +6,10 @@ import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
+import Login from './components/Login';
+import { supabase } from './supabaseClient';
+import { getUser } from './services/authService';
+
 
 
 
@@ -71,9 +75,27 @@ function App() {
   const [modalEditGoal, setModalEditGoal] = useState(null);
 
   const [dayModalOpen, setDayModalOpen] = useState(false);
- 
- 
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+
+  useEffect(() => {
+  async function fetchUser() {
+    try {
+      const { data } = await getUser();
+      setUser(data.user ?? null);
+    } catch (err) {
+      console.error(err);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }
+  fetchUser();
+}, []);
+
+
+  
   useEffect(() => {
     let mounted = true;
     async function loadWeek() {
@@ -131,6 +153,16 @@ function App() {
 
   
 
+  if (loading) {
+  return <div>Loading...</div>;
+}
+
+if (!user) {
+  return <Login onLogin={async () => {
+    const { data } = await getUser();
+    setUser(data.user ?? null);
+  }} />;
+}
 
 
   /* ---------- Week goal handlers (Supabase) ---------- */
@@ -222,6 +254,7 @@ function App() {
 
 
   return (
+    
     <ThemeProvider theme={theme}>
       <CssBaseline />
       
@@ -275,6 +308,8 @@ sx={{
         }}>
           Mijn Planner
         </Typography>
+
+
 
         {/* Donker/licht modus */}
         <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 2, flexWrap:"wrap", background: "transparent"  }}>
