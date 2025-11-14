@@ -21,14 +21,7 @@ import {
 } from './services/goalsService';
 
 function App() {
-  async function requestPermission() {
-    const permission = await Notification.requestPermission();
-    if(permission === 'granted'){
-    const token = await getToken(messaging, { vapidKey: "VAPID_KEY_HIER" });
-    console.log("FCM Token:", token);
-    // Stuur token naar jouw backend of Supabase
-    }
-  }
+  
 
   function normalizeDate(date) {
   if (!date) return null;
@@ -39,41 +32,9 @@ function App() {
 
 
 
-  requestPermission();
+  
 
-// Ontvang realtime berichten
-  onMessage(messaging, (payload) => {
-    console.log('Message received: ', payload);
-  });
 
-  function useDailyNotification() {
-    useEffect(() => {
-      // Controleer of browser notificaties ondersteunt
-      if (!("Notification" in window)) return;
-
-      // Vraag toestemming bij eerste keer openen
-      if (Notification.permission !== "granted") {
-        Notification.requestPermission().catch(()=> {});
-      }
-
-      // Functie om te checken of het 20:00 is en een notificatie te sturen
-      const checkTime = () => {
-        const now = new Date();
-        if (now.getHours() === 20 && now.getMinutes() === 0) {
-          if (Notification.permission === "granted") {
-          new Notification("Dagelijkse check", {
-            body: "Heb je je doelen van vandaag voltooid?",
-            renotify: true,
-          });
-        }}
-      };
-
-      // Check elke minuut
-      const interval = setInterval(checkTime, 60000);
-
-      return () => clearInterval(interval); // cleanup bij unmount
-    }, []);
-  }
 
   // 🌙 Dark mode
   
