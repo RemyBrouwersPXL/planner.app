@@ -96,7 +96,7 @@ function WeekPlanner({ weekGoals, onAddGoal, onUpdateGoal, onDeleteGoal, openMod
                   color: "#fff",
                   "&:hover": { boxShadow: "0 0 15px #FF6B6B" },
                 }}
-                onClick={() => onDeleteGoal(goal.id)}
+                onClick={(e) => {e.stopPropagation(); onDeleteGoal(goal.id)}}
               >
                 ✕
               </Fab>
