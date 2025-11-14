@@ -115,7 +115,7 @@ function DagPlanner({ currentWeekStart, dayGoals, openDayModal, openModal }) {
                       color: "#fff",
                       "&:hover": { boxShadow: "0 0 20px #00F5FF" },
                     }}
-                    onClick={(e) => {e.stopPropagation(); openModal(day.key)}}
+                    onClick={(e) => {e.stopPropagation(); setSelectedDay(day.key); openModal(day.key)}}
                   >
                     <AddIcon />
                   </Fab>

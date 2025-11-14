@@ -316,7 +316,7 @@ sx={{
             if (selectedDay) { 
               addDayGoalHandler(goal, selectedDay); 
             } else { 
-              addWeekGoalHandler({ ...goal, week_key: currentWeekKey }); 
+              addWeekGoalHandler(goal); 
             }
             setModalOpen(false);
           }}
