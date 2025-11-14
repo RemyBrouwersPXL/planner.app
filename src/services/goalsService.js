@@ -1,8 +1,13 @@
+
 import { supabase } from '../supabaseClient';
 
-// --- Week Goals ---
+// Week Goals
 export async function getWeekGoals(weekKey) {
-  const { data, error } = await supabase.from('week_goals').select('*').eq('week_key', weekKey);
+  const { data, error } = await supabase
+    .from('week_goals')
+    .select('*')
+    .eq('week_key', weekKey)
+    .order('id');
   if (error) throw error;
   return data;
 }
@@ -13,23 +18,15 @@ export async function addWeekGoal(goal) {
   return data;
 }
 
-export async function updateWeekGoal(id, updates) {
-  const { data, error } = await supabase.from('week_goals').update(updates).eq('id', id);
-  if (error) throw error;
-  return data;
-}
-
-export async function deleteWeekGoal(id) {
-  const { data, error } = await supabase.from('week_goals').delete().eq('id', id);
-  if (error) throw error;
-  return data;
-}
-
-// --- Day Goals ---
+// Day Goals
 export async function getDayGoals(date) {
-  const { data, error } = await supabase.from('day_goals').select('*').eq('date', date);
+  const { data, error } = await supabase
+    .from('day_goals')
+    .select('*')
+    .eq('date', date)
+    .order('id');
   if (error) throw error;
-  return data;
+    return data;
 }
 
 export async function addDayGoal(goal) {
@@ -38,14 +35,21 @@ export async function addDayGoal(goal) {
   return data;
 }
 
+
+
+
+
+export async function updateWeekGoal(id, updates) {
+  const { data, error } = await supabase.from('week_goals').update(updates).eq('id', id);
+  if (error) throw error;
+  return data;
+}
+
+
+
 export async function updateDayGoal(id, updates) {
   const { data, error } = await supabase.from('day_goals').update(updates).eq('id', id);
   if (error) throw error;
   return data;
 }
 
-export async function deleteDayGoal(id) {
-  const { data, error } = await supabase.from('day_goals').delete().eq('id', id);
-  if (error) throw error;
-  return data;
-}
