@@ -134,9 +134,9 @@ function App() {
     let mounted = true;
     async function loadDay() {
       try {
-        const data = await getDayGoals(selectedDay);
+        const data = await getDayGoals(normalizeDate(selectedDay));
         if (!mounted) return;
-        setDayGoals((prev) => ({ ...prev, [selectedDay]: Array.isArray(data) ? data : [] }));
+        setDayGoals((prev) => ({ ...prev, [normalizeDate(selectedDay)]: Array.isArray(data) ? data : [] }));
       } catch (err) {
         console.error("Kon dagdoelen niet laden:", err);
       }
@@ -355,7 +355,7 @@ sx={{
             if (selectedDay) { 
               addDayGoalHandler(goal, selectedDay); 
             } else { 
-              addWeekGoalHandler(goal); 
+              addWeekGoalHandler({ ...goal, week_key: currentWeekKey }); 
             }
             setModalOpen(false);
           }}

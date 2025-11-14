@@ -74,7 +74,7 @@ function DagPlanner({ currentWeekStart, dayGoals, openDayModal, openModal }) {
                 {(dayGoals[day.key] || []).map((goal) => (
                   <Card
                     key={goal.id}
-                    onClick={() => openDetailModal(goal, "day", day.key)}
+                    onClick={() => openModal(day.key)}
                     sx={{
                       mb: 2,
                       p: 1.5,
