@@ -25,7 +25,7 @@ export async function deleteWeekGoal(id) {
   
 }
 
-export async function deleteDagGoal(id) {
+export async function deleteDayGoal(id) {
   const { data, error} = await supabase.from('dag_goals').deleteDagGoal(id)
   if (error) throw error;
   return data;
