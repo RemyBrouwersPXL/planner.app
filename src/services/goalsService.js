@@ -18,6 +18,20 @@ export async function addWeekGoal(goal) {
   return data;
 }
 
+export async function deleteWeekGoal(id) {
+  const { data, error} = await supabase.from('week_goals').deleteWeekGoal(id)
+  if (error) throw error;
+  return data;
+  
+}
+
+export async function deleteDagGoal(id) {
+  const { data, error} = await supabase.from('dag_goals').deleteDagGoal(id)
+  if (error) throw error;
+  return data;
+  
+}
+
 // Day Goals
 export async function getDayGoals(date) {
   const { data, error } = await supabase
