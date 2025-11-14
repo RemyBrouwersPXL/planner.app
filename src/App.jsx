@@ -306,6 +306,7 @@ sx={{
           dayGoals={dayGoals}
           openDayModal={(dayKey)=>{ setSelectedDay(dayKey); setDayModalOpen(true); }}
           openModal={(dayKey)=>{ setSelectedDay(dayKey); setModalEditGoal(null); setModalOpen(true); }}
+          setSelectedDay={setSelectedDay}
         />
 
         {/* Modal */}
