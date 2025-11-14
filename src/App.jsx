@@ -7,7 +7,7 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import { messaging } from './firebase';
-import { getToken, onMessage } from "firebase/messaging";
+
 
 import WeekPlanner from "./components/WeekPlanner";
 import DagPlanner from "./components/DagPlanner";
