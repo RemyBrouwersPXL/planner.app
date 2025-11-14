@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect , useCallback } from "react";
 import { ThemeProvider, CssBaseline, GlobalStyles  } from "@mui/material";
 
 import { createTheme } from "@mui/material/styles";
@@ -326,15 +326,15 @@ sx={{
         {/* WeekPlanner */}
         <WeekPlanner
           weekGoals={weekGoals}
-          onUpdateGoal={handleUpdateWeekGoal}
-          onDeleteGoal={handleDeleteWeekGoal}
+          onUpdateGoal={updateWeekGoalHandler}
+          onDeleteGoal={deleteWeekGoalHandler}
 
           openModal={()=>{ setModalEditGoal(null); setModalOpen(true); }}
         />
 
         {/* DagPlanner */}
         <DagPlanner
-          currentWeekStart={currentWeekKey}
+          currentWeekStart={currentWeekStart}
           dayGoals={dayGoals}
           openDayModal={(dayKey)=>{ setSelectedDay(dayKey); setDayModalOpen(true); }}
           openModal={(dayKey)=>{ setSelectedDay(dayKey); setModalEditGoal(null); setModalOpen(true); }}
@@ -345,8 +345,8 @@ sx={{
           open={modalOpen}
           onClose={()=>setModalOpen(false)}
           onSave={(goal)=>{
-            if(selectedDay){ handleAddDayGoal({...goal, date:selectedDay}) }
-            else{ handleAddWeekGoal({...goal, week_key: currentWeekKey.toISOString().split("T")[0]}) }
+            if(selectedDay){ addDayGoalHandler({...goal, date:selectedDay}) }
+            else{ addWeekGoalHandler({...goal, week_key: currentWeekKey.toISOString().split("T")[0]}) }
             setModalOpen(false);
           }}
           editGoal={modalEditGoal}
@@ -359,7 +359,7 @@ sx={{
           dayKey={selectedDay}
           dayGoals={dayGoals[selectedDay] || []}
           toggleDayComplete={toggleDayComplete}
-          onDeleteGoal={handleDeleteDayGoal}
+          onDeleteGoal={deleteDayGoalHandler}
           openAddGoalModal={(dayKey)=>{ setSelectedDay(dayKey); setModalOpen(true); }}
           openEditGoalModal={(goal)=>{ setSelectedDay(goal.date); setModalEditGoal(goal); setModalOpen(true); }}
         
