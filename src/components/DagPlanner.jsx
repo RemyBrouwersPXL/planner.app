@@ -3,7 +3,7 @@ import { Grid, Card, CardContent, Typography, Fab, Box, Chip } from "@mui/materi
 import AddIcon from "@mui/icons-material/Add";
 import { Height } from "@mui/icons-material";
 
-function DagPlanner({ currentWeekStart, dayGoals, openDayModal, openModal }) {
+function DagPlanner({ currentWeekStart, dayGoals, openDayModal, openModal, setSelectedDay }) {
   const days = Array.from({ length: 7 }, (_, i) => {
     const date = new Date(currentWeekStart);
     date.setDate(currentWeekStart.getDate() + i);
