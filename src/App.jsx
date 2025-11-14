@@ -30,6 +30,12 @@ function App() {
     }
   }
 
+  function normalizeDate(date) {
+  if (!date) return null;
+  return new Date(date).toISOString().split("T")[0]; // 'YYYY-MM-DD'
+}
+
+
   requestPermission();
 
 // Ontvang realtime berichten
@@ -204,10 +210,11 @@ function App() {
   /* ---------- Day goal handlers (Supabase) ---------- */
   const addDayGoalHandler = async (goal, date = selectedDay) => {
     try {
-      const toInsert = { ...goal, date: date, completed: goal.completed ?? false };
+      const normalizedDate = normalizeDate(date);
+      const toInsert = { ...goal, date: normalizedDate, completed: goal.completed ?? false };
       const data = await addDayGoal(toInsert);
       if (Array.isArray(data)) {
-        setDayGoals((prev) => ({ ...prev, [date]: [...(prev[date] || []), ...data] }));
+        setDayGoals((prev) => ({ ...prev, [normalizedDate]: [...(prev[normalizedDate] || []), ...data] }));
       }
     } catch (err) {
       console.error("addDayGoal failed:", err);
@@ -343,14 +350,18 @@ sx={{
         {/* Modal */}
         <Modal
           open={modalOpen}
-          onClose={()=>setModalOpen(false)}
-          onSave={(goal)=>{
-            if(selectedDay){ addDayGoalHandler({...goal, date:selectedDay}) }
-            else{ addWeekGoalHandler({...goal, week_key: currentWeekKey.toISOString().split("T")[0]}) }
+          onClose={() => setModalOpen(false)}
+          onSave={(goal) => {
+            if (selectedDay) { 
+              addDayGoalHandler(goal, selectedDay); 
+            } else { 
+              addWeekGoalHandler(goal); 
+            }
             setModalOpen(false);
           }}
           editGoal={modalEditGoal}
         />
+
 
         
         <DayModal
