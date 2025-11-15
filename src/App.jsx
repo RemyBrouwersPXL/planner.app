@@ -177,9 +177,7 @@ if (!user) return <Login onLogin={handleLogin} />;
 
   
 
-  if (loading) {
-  return <div>Loading...</div>;
-}
+  
 
 
 
