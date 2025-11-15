@@ -94,31 +94,7 @@ function App() {
   fetchUser();
 }, []);
 
-
-const handleLogin = async () => {
-  setLoading(true);
-  try {
-    const { data } = await getUser();
-    const loggedInUser = data.user ?? null;
-    setUser(loggedInUser);
-
-    if (loggedInUser) {
-      await fetchWeekGoals();
-      if (selectedDay) await fetchDayGoals(selectedDay);
-    }
-  } catch (err) {
-    console.error(err);
-    setUser(null);
-  } finally {
-    setLoading(false);
-  }
-};
-
-{!user && <Login onLogin={handleLogin} />}
-
-
-  
-  const fetchWeekGoals = useCallback(async () => {
+const fetchWeekGoals = useCallback(async () => {
   try {
     const data = await getWeekGoals(currentWeekKey);
     setWeekGoals(Array.isArray(data) ? data : []);
@@ -146,6 +122,35 @@ const fetchDayGoals = useCallback(async (day) => {
 useEffect(() => {
   if (selectedDay) fetchDayGoals(selectedDay);
 }, [selectedDay]);
+
+
+const handleLogin = async () => {
+  setLoading(true);
+  try {
+    const { data } = await getUser();
+    const loggedInUser = data.user ?? null;
+    setUser(loggedInUser);
+
+    if (loggedInUser) {
+      await fetchWeekGoals();
+      if (selectedDay) await fetchDayGoals(selectedDay);
+    }
+  } catch (err) {
+    console.error(err);
+    setUser(null);
+  } finally {
+    setLoading(false);
+  }
+};
+
+if (loading) return <div>Loading...</div>;
+
+if (!user) return <Login onLogin={handleLogin} />;
+
+
+
+  
+  
 
 
 
