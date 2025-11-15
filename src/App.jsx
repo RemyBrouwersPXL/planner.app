@@ -20,10 +20,9 @@ import {
 
 function App() {
 
-  /* -------------------- Helpers -------------------- */
   const normalizeDate = (date) => {
     if (!date) return null;
-    return new Date(date).toISOString().split("T")[0]; // 'YYYY-MM-DD'
+    return new Date(date).toISOString().split("T")[0];
   };
 
   const getCurrentWeekKey = () => {
@@ -35,34 +34,31 @@ function App() {
 
   const getCurrentWeekStart = () => {
     const today = new Date();
-    const day = today.getDay();
+    const day = today.getDay(); // 0 (Sun) .. 6 (Sat)
     const monday = new Date(today);
     monday.setHours(0, 0, 0, 0);
     monday.setDate(today.getDate() - (day === 0 ? 6 : day - 1));
     return monday;
   };
 
-  /* -------------------- State -------------------- */
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  const [currentWeekStart, setCurrentWeekStart] = useState(getCurrentWeekStart());
-  const currentWeekKey = getCurrentWeekKey();
-
+  const [currentWeekStart, setCurrentWeekStart] = useState(() => getCurrentWeekStart());
   const [weekGoals, setWeekGoals] = useState([]);
   const [dayGoals, setDayGoals] = useState({});
   const [selectedDay, setSelectedDay] = useState(null);
+  const currentWeekKey = getCurrentWeekKey();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalEditGoal, setModalEditGoal] = useState(null);
   const [dayModalOpen, setDayModalOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  /* -------------------- Effects -------------------- */
+  // 🟢 User login
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchUser = async () => {
       try {
         const { data } = await getUser();
-        setUser(data.user ?? null);
+        setUser(data?.user ?? null);
       } catch (err) {
         console.error(err);
         setUser(null);
@@ -70,7 +66,7 @@ function App() {
         setLoading(false);
       }
     };
-    fetchUserData();
+    fetchUser();
   }, []);
 
   const fetchWeekGoals = useCallback(async () => {
@@ -94,16 +90,21 @@ function App() {
     }
   }, []);
 
-  useEffect(() => { fetchWeekGoals(); }, [fetchWeekGoals]);
-  useEffect(() => { if (selectedDay) fetchDayGoals(selectedDay); }, [selectedDay, fetchDayGoals]);
+  useEffect(() => {
+    fetchWeekGoals();
+  }, [currentWeekKey]);
 
-  /* -------------------- Handlers -------------------- */
+  useEffect(() => {
+    if (selectedDay) fetchDayGoals(selectedDay);
+  }, [selectedDay]);
+
   const handleLogin = async () => {
     setLoading(true);
     try {
       const { data } = await getUser();
-      const loggedInUser = data.user ?? null;
+      const loggedInUser = data?.user ?? null;
       setUser(loggedInUser);
+
       if (loggedInUser) {
         await fetchWeekGoals();
         if (selectedDay) await fetchDayGoals(selectedDay);
@@ -116,65 +117,90 @@ function App() {
     }
   };
 
-  const previousWeek = () => setCurrentWeekStart(prev => { const d = new Date(prev); d.setDate(d.getDate() - 7); return d; });
-  const nextWeek = () => setCurrentWeekStart(prev => { const d = new Date(prev); d.setDate(d.getDate() + 7); return d; });
+  if (loading) return <div>Loading...</div>;
+  if (!user) return <Login onLogin={handleLogin} />;
+
+  // 🗓 Week navigation
+  const previousWeek = () => setCurrentWeekStart(prev => new Date(prev.setDate(prev.getDate() - 7)));
+  const nextWeek = () => setCurrentWeekStart(prev => new Date(prev.setDate(prev.getDate() + 7)));
   const goToCurrentWeek = () => setCurrentWeekStart(getCurrentWeekStart());
 
-  /* ---------- Week goals ---------- */
+  /* ---------- Week goal handlers ---------- */
   const addWeekGoalHandler = async (goal) => {
     try {
       const toInsert = { ...goal, week_key: currentWeekKey, completed: goal.completed ?? false };
-      const data = await addWeekGoal(toInsert);
-      if (Array.isArray(data)) setWeekGoals(prev => [...prev, ...data]);
-    } catch (err) { console.error("addWeekGoal failed:", err); }
+      const { data, error } = await addWeekGoal(toInsert);
+      if (error) throw error;
+      setWeekGoals(prev => [...prev, ...(Array.isArray(data) ? data : [data])]);
+    } catch (err) {
+      console.error("addWeekGoal failed:", err);
+    }
   };
 
   const updateWeekGoalHandler = async (id, updates) => {
     try {
-      await updateWeekGoal(id, updates);
+      const { data, error } = await updateWeekGoal(id, updates);
+      if (error) throw error;
       setWeekGoals(prev => prev.map(g => g.id === id ? { ...g, ...updates } : g));
-    } catch (err) { console.error("updateWeekGoal failed:", err); }
+    } catch (err) {
+      console.error("updateWeekGoal failed:", err);
+    }
   };
 
   const deleteWeekGoalHandler = async (id) => {
     try {
-      await deleteWeekGoal(id);
+      const { error } = await deleteWeekGoal(id);
+      if (error) throw error;
       setWeekGoals(prev => prev.filter(g => g.id !== id));
-    } catch (err) { console.error("deleteWeekGoal failed:", err); }
+    } catch (err) {
+      console.error("deleteWeekGoal failed:", err);
+    }
   };
 
-  /* ---------- Day goals ---------- */
+  /* ---------- Day goal handlers ---------- */
   const addDayGoalHandler = async (goal, date = selectedDay) => {
     try {
       const normalizedDate = normalizeDate(date);
       const toInsert = { ...goal, date: normalizedDate, completed: goal.completed ?? false };
-      const data = await addDayGoal(toInsert);
-      if (Array.isArray(data)) setDayGoals(prev => ({ ...prev, [normalizedDate]: [...(prev[normalizedDate] || []), ...data] }));
-    } catch (err) { console.error("addDayGoal failed:", err); }
+      const { data, error } = await addDayGoal(toInsert);
+      if (error) throw error;
+      setDayGoals(prev => ({
+        ...prev,
+        [normalizedDate]: [...(prev[normalizedDate] || []), ...(Array.isArray(data) ? data : [data])]
+      }));
+    } catch (err) {
+      console.error("addDayGoal failed:", err);
+    }
   };
 
   const updateDayGoalHandler = async (id, updates) => {
     try {
-      await updateDayGoal(id, updates);
+      const { error } = await updateDayGoal(id, updates);
+      if (error) throw error;
       setDayGoals(prev => {
         const copy = { ...prev };
         if (!copy[selectedDay]) return copy;
         copy[selectedDay] = copy[selectedDay].map(g => g.id === id ? { ...g, ...updates } : g);
         return copy;
       });
-    } catch (err) { console.error("updateDayGoal failed:", err); }
+    } catch (err) {
+      console.error("updateDayGoal failed:", err);
+    }
   };
 
   const deleteDayGoalHandler = async (id) => {
     try {
-      await deleteDayGoal(id);
+      const { error } = await deleteDayGoal(id);
+      if (error) throw error;
       setDayGoals(prev => {
         const copy = { ...prev };
         if (!copy[selectedDay]) return copy;
         copy[selectedDay] = copy[selectedDay].filter(g => g.id !== id);
         return copy;
       });
-    } catch (err) { console.error("deleteDayGoal failed:", err); }
+    } catch (err) {
+      console.error("deleteDayGoal failed:", err);
+    }
   };
 
   const toggleDayComplete = (dayKey, id) => {
@@ -184,30 +210,24 @@ function App() {
     updateDayGoalHandler(id, { completed: !goal.completed });
   };
 
-  /* -------------------- Conditional render -------------------- */
-  if (loading) return <div>Loading...</div>;
-  if (!user) return <Login onLogin={handleLogin} />;
-
-  /* -------------------- JSX -------------------- */
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <GlobalStyles styles={{
         html: { minHeight: "100vh", backgroundAttachment: "fixed", overflowX: "hidden", WebkitBackgroundClip: "transparent" },
-        body: { overflowX: "hidden", background: "linear-gradient(45deg, #FC466B, #3F5EFB)", minHeight: "100vh", fontFamily: "'Montserrat', sans-serif", margin: 0 },
-        "#root": { height: "100%", minHeight: "100vh", display: "flex", flexDirection: "column" },
+        body: { overflowX: "hidden", background: "linear-gradient(45deg, #FC466B, #3F5EFB)", height: "100%", fontFamily: "'Montserrat', sans-serif", minHeight: "100vh", margin: 0, backgroundAttachment: "fixed" },
+        "#root": { height: "100%", minHeight: "100vh", display: "flex", flexDirection: "column" }
       }} />
 
       <Container sx={{
-        flex: 1, minHeight: "100vh", py: 4, display: "flex", flexDirection: "column",
-        justifyContent: "flex-start", background: "rgba(255,255,255,0.05)", backdropFilter: "blur(10px)",
-        borderRadius: "16px", boxShadow: "0 8px 32px rgba(0,0,0,0.2)", overflowX: "hidden",
+        flex: 1, minHeight: "100vh", py: 4, display: "flex", flexDirection: "column", justifyContent: "flex-start",
+        background: "rgba(255,255,255,0.05)", backdropFilter: "blur(10px)", borderRadius: "16px", boxShadow: "0 8px 32px rgba(0,0,0,0.2)", overflowX: "hidden"
       }}>
         <Typography variant="h3" align="center" gutterBottom sx={{ fontWeight: "bold", color: "linear-gradient(90deg, #00f5a0, #00d9f5)", WebkitBackgroundClip: "text", background: "transparent" }}>
           Mijn Planner
         </Typography>
 
-        <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 2, flexWrap: "wrap" }}>
+        <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 2, flexWrap: "wrap", background: "transparent" }}>
           <Button variant="outlined" onClick={previousWeek}>Vorige week</Button>
           <Button variant="contained" onClick={goToCurrentWeek}>Huidige week</Button>
           <Button variant="outlined" onClick={nextWeek}>Volgende week</Button>
@@ -223,15 +243,15 @@ function App() {
         <DagPlanner
           currentWeekStart={currentWeekStart}
           dayGoals={dayGoals}
-          openDayModal={(dayKey) => { setSelectedDay(dayKey); setDayModalOpen(true); }}
-          openModal={(dayKey) => { setSelectedDay(dayKey); setModalEditGoal(null); setModalOpen(true); }}
+          openDayModal={dayKey => { setSelectedDay(dayKey); setDayModalOpen(true); }}
+          openModal={dayKey => { setSelectedDay(dayKey); setModalEditGoal(null); setModalOpen(true); }}
           setSelectedDay={setSelectedDay}
         />
 
         <Modal
           open={modalOpen}
           onClose={() => setModalOpen(false)}
-          onSave={(goal) => {
+          onSave={goal => {
             if (selectedDay) addDayGoalHandler(goal, selectedDay);
             else addWeekGoalHandler(goal);
             setModalOpen(false);
@@ -246,10 +266,9 @@ function App() {
           dayGoals={dayGoals[selectedDay] || []}
           toggleDayComplete={toggleDayComplete}
           onDeleteGoal={deleteDayGoalHandler}
-          openAddGoalModal={(dayKey) => { setSelectedDay(dayKey); setModalOpen(true); }}
-          openEditGoalModal={(goal) => { setSelectedDay(goal.date); setModalEditGoal(goal); setModalOpen(true); }}
+          openAddGoalModal={dayKey => { setSelectedDay(dayKey); setModalOpen(true); }}
+          openEditGoalModal={goal => { setSelectedDay(goal.date); setModalEditGoal(goal); setModalOpen(true); }}
         />
-
       </Container>
     </ThemeProvider>
   );
