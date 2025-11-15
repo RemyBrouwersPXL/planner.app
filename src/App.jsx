@@ -95,40 +95,59 @@ function App() {
 }, []);
 
 
-  
-  useEffect(() => {
-    let mounted = true;
-    async function loadWeek() {
-      try {
-        const data = await getWeekGoals(currentWeekKey);
-        if (!mounted) return;
-        // ensure array
-        setWeekGoals(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("Kon weekdoelen niet laden:", err);
-        setWeekGoals([]);
-      }
+const handleLogin = async () => {
+  setLoading(true);
+  try {
+    const { data } = await getUser();
+    const loggedInUser = data.user ?? null;
+    setUser(loggedInUser);
+
+    if (loggedInUser) {
+      await fetchWeekGoals();
+      if (selectedDay) await fetchDayGoals(selectedDay);
     }
-    loadWeek();
-    return () => {
-      mounted = false;
-    };
-  }, [currentWeekKey]);
+  } catch (err) {
+    console.error(err);
+    setUser(null);
+  } finally {
+    setLoading(false);
+  }
+};
+
+{!user && <Login onLogin={handleLogin} />}
+
+
+  
+  const fetchWeekGoals = useCallback(async () => {
+  try {
+    const data = await getWeekGoals(currentWeekKey);
+    setWeekGoals(Array.isArray(data) ? data : []);
+  } catch (err) {
+    console.error("Kon weekdoelen niet laden:", err);
+    setWeekGoals([]);
+  }
+}, [currentWeekKey]);
+
+const fetchDayGoals = useCallback(async (day) => {
+  if (!day) return;
+  const normalizedDay = normalizeDate(day);
+  try {
+    const data = await getDayGoals(normalizedDay);
+    setDayGoals((prev) => ({ ...prev, [normalizedDay]: Array.isArray(data) ? data : [] }));
+  } catch (err) {
+    console.error("Kon dagdoelen niet laden:", err);
+  }
+}, []);
 
   useEffect(() => {
-  if (!selectedDay) return;
-  const normalizedDay = normalizeDate(selectedDay);
-  async function loadDay() {
-    try {
-      const data = await getDayGoals(normalizedDay);
-      console.log("dayGoals fetched:", normalizedDay, data); // << debug
-      setDayGoals((prev) => ({ ...prev, [normalizedDay]: Array.isArray(data) ? data : [] }));
-    } catch (err) {
-      console.error("Kon dagdoelen niet laden:", err);
-    }
-  }
-  loadDay();
+  fetchWeekGoals();
+}, [currentWeekKey]);
+
+useEffect(() => {
+  if (selectedDay) fetchDayGoals(selectedDay);
 }, [selectedDay]);
+
+
 
   // 🗓 Weeknavigatie
   const previousWeek = useCallback(() => {
@@ -157,12 +176,6 @@ function App() {
   return <div>Loading...</div>;
 }
 
-if (!user) {
-  return <Login onLogin={async () => {
-    const { data } = await getUser();
-    setUser(data.user ?? null);
-  }} />;
-}
 
 
   /* ---------- Week goal handlers (Supabase) ---------- */
@@ -330,7 +343,7 @@ sx={{
         <WeekPlanner
           weekGoals={weekGoals}
           onUpdateGoal={updateWeekGoalHandler}
-          onDeleteGoal={deleteDayGoalHandler}
+          onDeleteGoal={deleteWeekGoalHandler}
 
           openModal={()=>{ setModalEditGoal(null); setModalOpen(true); }}
         />
