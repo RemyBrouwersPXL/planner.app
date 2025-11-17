@@ -159,31 +159,31 @@ function App() {
 
   /* ---------- Day goal handlers ---------- */
   const addDayGoalHandler = async (goal, date = selectedDay) => {
-  if (!date) return; // fallback
+    if (!date) return;
 
-  const normalizedDate = normalizeDate(date);
-  const toInsert = { ...goal, date: normalizedDate, completed: goal.completed ?? false };
+    const normalizedDate = normalizeDate(date);
+    const toInsert = { ...goal, date: normalizedDate, completed: goal.completed ?? false };
 
-  try {
-    const { data, error } = await addDayGoal(toInsert);
-    if (error) throw error;
+    try {
+      const { data, error } = await addDayGoal(toInsert);
+      if (error) throw error;
 
-    const newGoals = Array.isArray(data) ? data : [data];
+      // 1️⃣ Voeg direct toe aan state (optioneel)
+      setDayGoals(prev => ({
+        ...prev,
+        [normalizedDate]: [...(prev[normalizedDate] || []), ...(Array.isArray(data) ? data : [data])]
+      }));
 
-    // 1️⃣ Voeg direct toe aan de juiste dag in state
-    setDayGoals(prev => ({
-      ...prev,
-      [normalizedDate]: [...(prev[normalizedDate] || []), ...newGoals]
-    }));
+      // 2️⃣ Wacht 5 seconden en haal dagdoelen opnieuw op
+      setTimeout(() => {
+        fetchDayGoals(normalizedDate);
+      }, 5000); // 5000 ms = 5 seconden
 
-    // 2️⃣ Optioneel: open direct de DayModal voor die dag als hij nog niet open is
-    setSelectedDay(normalizedDate);
-    setDayModalOpen(true);
+    } catch (err) {
+      console.error("addDayGoal failed:", err);
+    }
+  };
 
-  } catch (err) {
-    console.error("addDayGoal failed:", err);
-  }
-};
 
 
   const updateDayGoalHandler = async (id, updates) => {
