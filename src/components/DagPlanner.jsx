@@ -73,10 +73,14 @@ function DagPlanner({ currentWeekStart, dayGoals, openDayModal, openModal, setSe
                 {/* 🎯 Alleen titel tonen — klik opent detailmodal */}
                 
                 {
-                (dayGoals[day.key] || [].map(goal =>
+                ((dayGoals[day.key] || []).map(goal =>
                   <Card
                     key={goal.id}
-                    onClick={() => openModal(day.key)}
+                    onClick={(e) => {
+                        e.stopPropagation(); 
+                        openModal(goal);
+                      }}
+
                     sx={{
                       mb: 2,
                       p: 1.5,
