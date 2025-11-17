@@ -12,7 +12,7 @@ import Modal from "./components/Modal";
 import DayModal from "./components/DayModal";
 import theme from "./theme";
 
-import { supabase } from './services/supabase';
+import { supabase } from './supabaseClient';
 import { getUser } from './services/authService';
 import {
   getWeekGoals, addWeekGoal, updateWeekGoal, deleteWeekGoal,
