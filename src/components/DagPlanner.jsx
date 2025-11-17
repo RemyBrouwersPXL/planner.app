@@ -6,9 +6,17 @@ import { Height } from "@mui/icons-material";
 function DagPlanner({ currentWeekStart, dayGoals, openDayModal, openModal, setSelectedDay }) {
   const days = Array.from({ length: 7 }, (_, i) => {
     const date = new Date(currentWeekStart);
-    date.setDate(currentWeekStart.getDate() + i);
+    date.setDate(date.getDate() + i);
+
+    // FIX: maak key via UTC zodat hij nooit verspringt
+    const key = new Date(Date.UTC(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    )).toISOString().split("T")[0];
+
     return {
-      key: date.toISOString().split("T")[0],
+      key,
       label: date.toLocaleDateString("nl-NL", {
         weekday: "long",
         day: "numeric",
