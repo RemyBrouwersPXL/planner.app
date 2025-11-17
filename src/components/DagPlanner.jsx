@@ -71,7 +71,10 @@ function DagPlanner({ currentWeekStart, dayGoals, openDayModal, openModal, setSe
                   boxShadow: "0 0 20px #6C63FF",
                 },
               }}
-              onClick={() => openDayModal(day.key)}
+              onClick={(e) => {
+                        e.stopPropagation(); 
+                        openDayModal(goal);
+                      }}
             >
               <CardContent sx={{ flexGrow: 1, alignItems: "stretch", display: "flex", flexDirection: "column", justifyContent: "space-between", width: 175, fontFamily: "'Orbitron', sans-serif", color: "#74ffc8ff", textShadow: "0 0 10px #6C63FF", borderRadius: 3, Height: "100%",}}>
                 <Typography variant="h6" align="center" sx={{ mb: 2 }}>
@@ -118,20 +121,7 @@ function DagPlanner({ currentWeekStart, dayGoals, openDayModal, openModal, setSe
                   </Card>
                 ))}
 
-                {/* ➕ Nieuwe doel toevoegen */}
-                <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-                  <Fab
-                    size="medium"
-                    sx={{
-                      background: "linear-gradient(45deg, #6C63FF, #00F5FF)",
-                      color: "#fff",
-                      "&:hover": { boxShadow: "0 0 20px #00F5FF" },
-                    }}
-                    onClick={(e) => {e.stopPropagation(); setSelectedDay(day.key); openModal(day.key)}}
-                  >
-                    <AddIcon />
-                  </Fab>
-                </Box>
+              
               </CardContent>
             </Card>
           </Grid>
