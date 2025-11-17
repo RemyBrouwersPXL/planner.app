@@ -12,6 +12,7 @@ import Modal from "./components/Modal";
 import DayModal from "./components/DayModal";
 import theme from "./theme";
 
+import { supabase } from './services/supabase';
 import { getUser } from './services/authService';
 import {
   getWeekGoals, addWeekGoal, updateWeekGoal, deleteWeekGoal,
@@ -20,10 +21,7 @@ import {
 
 function App() {
 
-  const normalizeDate = (date) => {
-    if (!date) return null;
-    return new Date(date).toISOString().split("T")[0];
-  };
+  const normalizeDate = (date) => date ? new Date(date).toISOString().split("T")[0] : null;
 
   const getCurrentWeekKey = () => {
     const today = new Date();
@@ -34,7 +32,7 @@ function App() {
 
   const getCurrentWeekStart = () => {
     const today = new Date();
-    const day = today.getDay(); // 0 (Sun) .. 6 (Sat)
+    const day = today.getDay();
     const monday = new Date(today);
     monday.setHours(0, 0, 0, 0);
     monday.setDate(today.getDate() - (day === 0 ? 6 : day - 1));
@@ -45,13 +43,13 @@ function App() {
   const [weekGoals, setWeekGoals] = useState([]);
   const [dayGoals, setDayGoals] = useState({});
   const [selectedDay, setSelectedDay] = useState(null);
-  const currentWeekKey = getCurrentWeekKey();
-
   const [modalOpen, setModalOpen] = useState(false);
   const [modalEditGoal, setModalEditGoal] = useState(null);
   const [dayModalOpen, setDayModalOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const currentWeekKey = getCurrentWeekKey();
 
   // 🟢 User login
   useEffect(() => {
@@ -69,6 +67,7 @@ function App() {
     fetchUser();
   }, []);
 
+  // 🟢 Weekdoelen ophalen
   const fetchWeekGoals = useCallback(async () => {
     try {
       const data = await getWeekGoals(currentWeekKey);
@@ -79,6 +78,7 @@ function App() {
     }
   }, [currentWeekKey]);
 
+  // 🟢 Dagdoelen ophalen
   const fetchDayGoals = useCallback(async (day) => {
     if (!day) return;
     const normalizedDay = normalizeDate(day);
@@ -120,7 +120,7 @@ function App() {
   if (loading) return <div>Loading...</div>;
   if (!user) return <Login onLogin={handleLogin} />;
 
-  // 🗓 Week navigation
+  // 🗓 Week navigatie
   const previousWeek = () => setCurrentWeekStart(prev => new Date(prev.setDate(prev.getDate() - 7)));
   const nextWeek = () => setCurrentWeekStart(prev => new Date(prev.setDate(prev.getDate() + 7)));
   const goToCurrentWeek = () => setCurrentWeekStart(getCurrentWeekStart());
@@ -160,31 +160,17 @@ function App() {
   /* ---------- Day goal handlers ---------- */
   const addDayGoalHandler = async (goal, date = selectedDay) => {
     if (!date) return;
-
     const normalizedDate = normalizeDate(date);
     const toInsert = { ...goal, date: normalizedDate, completed: goal.completed ?? false };
 
     try {
       const { data, error } = await addDayGoal(toInsert);
       if (error) throw error;
-
-      // 1️⃣ Voeg direct toe aan state (optioneel)
-      setDayGoals(prev => ({
-        ...prev,
-        [normalizedDate]: [...(prev[normalizedDate] || []), ...(Array.isArray(data) ? data : [data])]
-      }));
-
-      // 2️⃣ Wacht 5 seconden en haal dagdoelen opnieuw op
-      setInterval(() => {
-        fetchDayGoals(normalizedDate);
-      }, 5000); // 5000 ms = 5 seconden
-
+      // Geen interval nodig, realtime listener doet update
     } catch (err) {
       console.error("addDayGoal failed:", err);
     }
   };
-
-
 
   const updateDayGoalHandler = async (id, updates) => {
     try {
@@ -223,6 +209,36 @@ function App() {
     updateDayGoalHandler(id, { completed: !goal.completed });
   };
 
+  // 🔴 Supabase realtime listener voor dagdoelen
+  useEffect(() => {
+    const subscription = supabase
+      .from('day_goals')
+      .on('INSERT', payload => {
+        const newGoal = payload.new;
+        setDayGoals(prev => ({
+          ...prev,
+          [newGoal.date]: [...(prev[newGoal.date] || []), newGoal]
+        }));
+      })
+      .on('UPDATE', payload => {
+        const updatedGoal = payload.new;
+        setDayGoals(prev => ({
+          ...prev,
+          [updatedGoal.date]: prev[updatedGoal.date]?.map(g => g.id === updatedGoal.id ? updatedGoal : g) || []
+        }));
+      })
+      .on('DELETE', payload => {
+        const deletedGoal = payload.old;
+        setDayGoals(prev => ({
+          ...prev,
+          [deletedGoal.date]: prev[deletedGoal.date]?.filter(g => g.id !== deletedGoal.id) || []
+        }));
+      })
+      .subscribe();
+
+    return () => supabase.removeSubscription(subscription);
+  }, []);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -257,7 +273,7 @@ function App() {
           currentWeekStart={currentWeekStart}
           dayGoals={dayGoals}
           openDayModal={dayKey => { setSelectedDay(dayKey); setDayModalOpen(true); }}
-          openModal={dayKey => { setSelectedDay(dayKey); setModalEditGoal(null); setModalOpen(true); }}
+          openModal={goal => { setSelectedDay(goal.date); setModalEditGoal(goal); setModalOpen(true); }}
           setSelectedDay={setSelectedDay}
         />
 
