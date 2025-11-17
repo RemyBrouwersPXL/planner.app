@@ -211,29 +211,39 @@ function App() {
 
   // 🔴 Supabase realtime listener voor dagdoelen
   useEffect(() => {
-  const subscription = supabase
-    .channel('day_goals_channel')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'day_goals' }, payload => {
-      const newGoal = payload.new;
-      const oldGoal = payload.old;
+    let isMounted = true; // ✅ check of component nog gemount is
 
-      setDayGoals(prev => {
-        const copy = { ...prev };
-        if (newGoal) {
-          copy[newGoal.date] = [...(copy[newGoal.date] || []), newGoal];
-        }
-        if (oldGoal) {
-          copy[oldGoal.date] = (copy[oldGoal.date] || []).filter(g => g.id !== oldGoal.id);
-        }
-        return copy;
-      });
-    })
-    .subscribe();
+    const subscription = supabase
+      .channel('day_goals_channel')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'day_goals' },
+        (payload) => {
+          if (!isMounted) return; // stop update als unmounted
 
-  return () => {
-    subscription.unsubscribe();
-  };
-}, []);
+          const newGoal = payload.new;
+          const oldGoal = payload.old;
+
+          setDayGoals((prev) => {
+            const copy = { ...prev };
+            if (newGoal?.date) {
+              copy[newGoal.date] = [...(copy[newGoal.date] || []), newGoal];
+            }
+            if (oldGoal?.date) {
+              copy[oldGoal.date] = (copy[oldGoal.date] || []).filter((g) => g.id !== oldGoal.id);
+            }
+            return copy;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe(); // ✅ veilig unsubscribe
+    };
+  }, []);
+
 
 
   return (
