@@ -13,7 +13,7 @@ function DagPlanner({ currentWeekStart, dayGoals, openDayModal, openModal, setSe
       date.getFullYear(),
       date.getMonth(),
       date.getDate()
-    )).toISOString().split("T")[0];
+  )).toISOString().split("T")[0];
 
     return {
       key,
@@ -71,10 +71,7 @@ function DagPlanner({ currentWeekStart, dayGoals, openDayModal, openModal, setSe
                   boxShadow: "0 0 20px #6C63FF",
                 },
               }}
-              onClick={(e) => {
-                        e.stopPropagation(); 
-                        openDayModal(goal);
-                      }}
+              onClick={() => openDayModal(day.key)}
             >
               <CardContent sx={{ flexGrow: 1, alignItems: "stretch", display: "flex", flexDirection: "column", justifyContent: "space-between", width: 175, fontFamily: "'Orbitron', sans-serif", color: "#74ffc8ff", textShadow: "0 0 10px #6C63FF", borderRadius: 3, Height: "100%",}}>
                 <Typography variant="h6" align="center" sx={{ mb: 2 }}>
@@ -121,7 +118,7 @@ function DagPlanner({ currentWeekStart, dayGoals, openDayModal, openModal, setSe
                   </Card>
                 ))}
 
-              
+                
               </CardContent>
             </Card>
           </Grid>
