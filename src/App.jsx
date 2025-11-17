@@ -175,7 +175,7 @@ function App() {
       }));
 
       // 2️⃣ Wacht 5 seconden en haal dagdoelen opnieuw op
-      setTimeout(() => {
+      setInterval(() => {
         fetchDayGoals(normalizedDate);
       }, 5000); // 5000 ms = 5 seconden
 
