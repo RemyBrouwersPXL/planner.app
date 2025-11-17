@@ -211,33 +211,30 @@ function App() {
 
   // 🔴 Supabase realtime listener voor dagdoelen
   useEffect(() => {
-    const subscription = supabase
-      .from('day_goals')
-      .on('INSERT', payload => {
-        const newGoal = payload.new;
-        setDayGoals(prev => ({
-          ...prev,
-          [newGoal.date]: [...(prev[newGoal.date] || []), newGoal]
-        }));
-      })
-      .on('UPDATE', payload => {
-        const updatedGoal = payload.new;
-        setDayGoals(prev => ({
-          ...prev,
-          [updatedGoal.date]: prev[updatedGoal.date]?.map(g => g.id === updatedGoal.id ? updatedGoal : g) || []
-        }));
-      })
-      .on('DELETE', payload => {
-        const deletedGoal = payload.old;
-        setDayGoals(prev => ({
-          ...prev,
-          [deletedGoal.date]: prev[deletedGoal.date]?.filter(g => g.id !== deletedGoal.id) || []
-        }));
-      })
-      .subscribe();
+  const subscription = supabase
+    .channel('day_goals_channel')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'day_goals' }, payload => {
+      const newGoal = payload.new;
+      const oldGoal = payload.old;
 
-    return () => supabase.removeSubscription(subscription);
-  }, []);
+      setDayGoals(prev => {
+        const copy = { ...prev };
+        if (newGoal) {
+          copy[newGoal.date] = [...(copy[newGoal.date] || []), newGoal];
+        }
+        if (oldGoal) {
+          copy[oldGoal.date] = (copy[oldGoal.date] || []).filter(g => g.id !== oldGoal.id);
+        }
+        return copy;
+      });
+    })
+    .subscribe();
+
+  return () => {
+    subscription.unsubscribe();
+  };
+}, []);
+
 
   return (
     <ThemeProvider theme={theme}>
