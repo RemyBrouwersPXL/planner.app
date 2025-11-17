@@ -159,19 +159,32 @@ function App() {
 
   /* ---------- Day goal handlers ---------- */
   const addDayGoalHandler = async (goal, date = selectedDay) => {
-    try {
-      const normalizedDate = normalizeDate(date);
-      const toInsert = { ...goal, date: normalizedDate, completed: goal.completed ?? false };
-      const { data, error } = await addDayGoal(toInsert);
-      if (error) throw error;
-      setDayGoals(prev => ({
-        ...prev,
-        [normalizedDate]: [...(prev[normalizedDate] || []), ...(Array.isArray(data) ? data : [data])]
-      }));
-    } catch (err) {
-      console.error("addDayGoal failed:", err);
-    }
-  };
+  if (!date) return; // fallback
+
+  const normalizedDate = normalizeDate(date);
+  const toInsert = { ...goal, date: normalizedDate, completed: goal.completed ?? false };
+
+  try {
+    const { data, error } = await addDayGoal(toInsert);
+    if (error) throw error;
+
+    const newGoals = Array.isArray(data) ? data : [data];
+
+    // 1️⃣ Voeg direct toe aan de juiste dag in state
+    setDayGoals(prev => ({
+      ...prev,
+      [normalizedDate]: [...(prev[normalizedDate] || []), ...newGoals]
+    }));
+
+    // 2️⃣ Optioneel: open direct de DayModal voor die dag als hij nog niet open is
+    setSelectedDay(normalizedDate);
+    setDayModalOpen(true);
+
+  } catch (err) {
+    console.error("addDayGoal failed:", err);
+  }
+};
+
 
   const updateDayGoalHandler = async (id, updates) => {
     try {
