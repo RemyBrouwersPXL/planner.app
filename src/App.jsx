@@ -210,39 +210,47 @@ function App() {
   };
 
   // 🔴 Supabase realtime listener voor dagdoelen
-  // useEffect(() => {
-  //   let isMounted = true; // ✅ check of component nog gemount is
+  useEffect(() => {
+    let isMounted = true;
 
-  //   const subscription = supabase
-  //     .channel('day_goals_channel')
-  //     .on(
-  //       'postgres_changes',
-  //       { event: '*', schema: 'public', table: 'day_goals' },
-  //       (payload) => {
-  //         if (!isMounted) return; // stop update als unmounted
+    // Maak de channel subscription
+    const channel = supabase
+      .channel('public:day_goals') // unieke naam
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'day_goals' },
+        (payload) => {
+          if (!isMounted) return; // voorkom update als component unmounted
 
-  //         const newGoal = payload.new;
-  //         const oldGoal = payload.old;
+          const newGoal = payload.new;
+          const oldGoal = payload.old;
 
-  //         setDayGoals((prev) => {
-  //           const copy = { ...prev };
-  //           if (newGoal?.date) {
-  //             copy[newGoal.date] = [...(copy[newGoal.date] || []), newGoal];
-  //           }
-  //           if (oldGoal?.date) {
-  //             copy[oldGoal.date] = (copy[oldGoal.date] || []).filter((g) => g.id !== oldGoal.id);
-  //           }
-  //           return copy;
-  //         });
-  //       }
-  //     )
-  //     .subscribe();
+          setDayGoals(prev => {
+            const copy = { ...prev };
 
-  //   return () => {
-  //     isMounted = false;
-  //     subscription.unsubscribe(); // ✅ veilig unsubscribe
-  //   };
-  // }, []);
+            // nieuwe goal toevoegen
+            if (newGoal?.date) {
+              copy[newGoal.date] = [...(copy[newGoal.date] || []), newGoal];
+            }
+
+            // oude goal verwijderen bij DELETE
+            if (oldGoal?.date) {
+              copy[oldGoal.date] = (copy[oldGoal.date] || []).filter(g => g.id !== oldGoal.id);
+            }
+
+            return copy;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      isMounted = false;
+      // juiste unsubscribe methode in v2+
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
 
 
 
