@@ -231,6 +231,31 @@ function App() {
     };
   }, [fetchDayGoals]);
 
+  useEffect(() => {
+    const weekChannel = supabase
+      .channel('week_goals_channel')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'week_goals' }, (payload) => {
+        // Alleen doelen van de huidige week
+        if (!payload.new?.week_key && !payload.old?.week_key) return;
+        const weekKey = payload.new?.week_key || payload.old?.week_key;
+        if (weekKey !== currentWeekKey) return;
+
+        if (payload.eventType === 'INSERT') {
+          setWeekGoals(prev => [...prev, payload.new]);
+        }
+
+        if (payload.eventType === 'UPDATE') {
+          setWeekGoals(prev => prev.map(g => g.id === payload.new.id ? payload.new : g));
+        }
+
+        if (payload.eventType === 'DELETE') {
+          setWeekGoals(prev => prev.filter(g => g.id !== payload.old.id));
+        }
+      })
+      .subscribe();
+
+    return () => supabase.removeChannel(weekChannel);
+  }, [currentWeekKey]);
 
 
 
