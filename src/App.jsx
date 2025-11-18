@@ -323,7 +323,7 @@ function App() {
           weekGoals={weekGoals}
           onAddWeekGoal={addWeekGoal}
           onUpdateGoal={() => {updateWeekGoalHandler; fetchWeekGoals()}}
-          onDeleteGoal={deleteWeekGoalHandler}
+          onDeleteGoal={() => {deleteWeekGoalHandler; fetchWeekGoals()}}
           openModal={() => { setModalEditGoal(null); setModalType('week'); setModalOpen(true); }}
         />
 
