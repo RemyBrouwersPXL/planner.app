@@ -132,6 +132,7 @@ function App() {
       const { data, error } = await addWeekGoal(toInsert);
       if (error) throw error;
       setWeekGoals(prev => [...prev, ...(Array.isArray(data) ? data : [data])]);
+      fetchWeekGoals
     } catch (err) {
       console.error("addWeekGoal failed:", err);
     }
@@ -296,7 +297,7 @@ function App() {
 
         <WeekPlanner
           weekGoals={weekGoals}
-          onUpdateGoal={updateWeekGoalHandler}
+          onUpdateGoal={() => {updateWeekGoalHandler; fetchWeekGoals}}
           onDeleteGoal={deleteWeekGoalHandler}
           openModal={() => { setModalEditGoal(null); setModalOpen(true); }}
         />
@@ -327,7 +328,8 @@ function App() {
           open={dayModalOpen}
           onSave={fetchWeekDayGoals(currentWeekStart)}
           onClose={() =>{ setDayModalOpen(false); 
-            fetchWeekDayGoals(currentWeekStart);}}
+            fetchWeekDayGoals(currentWeekStart);
+          fetchWeekGoals;}}
           dayKey={selectedDay}
           dayGoals={dayGoals[selectedDay] || []}
           toggleDayComplete={toggleDayComplete}
