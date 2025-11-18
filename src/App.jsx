@@ -314,12 +314,14 @@ function App() {
             if (selectedDay) addDayGoalHandler(goal, selectedDay);
             else addWeekGoalHandler(goal);
             setModalOpen(false);
+            fetchWeekDayGoals(currentWeekStart);
           }}
           editGoal={modalEditGoal}
         />
 
         <DayModal
-          open={() => {dayModalOpen; fetchWeekDayGoals(currentWeekStart);}}
+          open={dayModalOpen}
+          onSave={fetchWeekDayGoals(currentWeekStart)}
           onClose={() =>{ setDayModalOpen(false); 
             fetchWeekDayGoals(currentWeekStart);}}
           dayKey={selectedDay}
