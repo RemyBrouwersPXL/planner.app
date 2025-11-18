@@ -319,7 +319,7 @@ function App() {
         />
 
         <DayModal
-          open={dayModalOpen}
+          open={() => {dayModalOpen; fetchWeekDayGoals(currentWeekStart);}}
           onClose={() =>{ setDayModalOpen(false); 
             fetchWeekDayGoals(currentWeekStart);}}
           dayKey={selectedDay}
