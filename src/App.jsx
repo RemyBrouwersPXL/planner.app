@@ -159,8 +159,6 @@ function App() {
   const addDayGoalHandler = async (goal, date = selectedDay) => {
     if (!date) return;
     const dayKey = normalizeDate(date);
-
-    // verwijder id zodat supabase het kan aanmaken
     const { id, ...goalWithoutId } = goal;
     const toInsert = { ...goalWithoutId, date: dayKey, completed: goal.completed ?? false };
 
@@ -171,14 +169,18 @@ function App() {
       if (error) throw error;
 
       if (data) {
+        // Voeg toe aan lokale state zodat het UI meteen updatet
         setDayGoals(prev => {
           const copy = { ...prev };
-          if (!copy[dayKey]) copy[dayKey] = [];  // zorg dat de array bestaat
+          if (!copy[dayKey]) copy[dayKey] = [];
           copy[dayKey] = [...copy[dayKey], ...(Array.isArray(data) ? data : [data])];
           return copy;
         });
 
-        // Optioneel: open de DayModal direct voor deze dag
+        // Optioneel: herlaad alle dagen van de week
+        fetchWeekDayGoals(currentWeekStart);
+
+        // Zorg dat de DayModal open blijft
         setSelectedDay(dayKey);
         setDayModalOpen(true);
       }
@@ -186,6 +188,7 @@ function App() {
       console.error("addDayGoal failed:", err);
     }
   };
+
 
 
   const updateDayGoalHandler = async (id, updates) => {
