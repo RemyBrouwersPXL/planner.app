@@ -40,7 +40,8 @@ function App() {
   };
 
   const [currentWeekStart, setCurrentWeekStart] = useState(() => getCurrentWeekStart());
-  
+  const [modalType, setModalType] = useState(null); // 'day' of 'week'
+
   const [weekGoals, setWeekGoals] = useState([]);
   const [dayGoals, setDayGoals] = useState({});
   const [selectedDay, setSelectedDay] = useState(null);
@@ -303,7 +304,7 @@ function App() {
         <DagPlanner
           currentWeekStart={currentWeekStart}
           dayGoals={dayGoals}
-          openDayModal={dayKey => { setSelectedDay(dayKey); setDayModalOpen(true); }}
+          openDayModal={dayKey => { setSelectedDay(dayKey); setModalType('week'); setDayModalOpen(true); }}
           openModal={goal => { setSelectedDay(goal.date); setModalEditGoal(goal); setModalOpen(true); }}
           setSelectedDay={setSelectedDay}
         />
@@ -312,10 +313,12 @@ function App() {
           open={modalOpen}
           onClose={() => { setModalOpen(false); fetchWeekDayGoals(currentWeekStart);}}
           onSave={goal => {
-            if (selectedDay) addDayGoalHandler(goal, selectedDay);
-            else addWeekGoalHandler(goal);
+            if (modalType === 'day' && selectedDay) {
+              addDayGoalHandler(goal, selectedDay); // voegt toe aan DB + state
+            } else if (modalType === 'week') {
+              addWeekGoalHandler(goal);
+            }
             setModalOpen(false);
-            fetchWeekDayGoals(currentWeekStart);
           }}
           editGoal={modalEditGoal}
         />
@@ -329,7 +332,7 @@ function App() {
           dayGoals={dayGoals[selectedDay] || []}
           toggleDayComplete={toggleDayComplete}
           onDeleteGoal={deleteDayGoalHandler}
-          openAddGoalModal={dayKey => { setSelectedDay(dayKey); setModalOpen(true); }}
+          openAddGoalModal={dayKey => { setSelectedDay(dayKey); setModalType('day'); setModalOpen(true); }}
           openEditGoalModal={goal => { setSelectedDay(goal.date); setModalEditGoal(goal); setModalOpen(true); }}
         />
       </Container>
