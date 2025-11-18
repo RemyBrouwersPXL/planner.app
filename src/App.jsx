@@ -81,19 +81,19 @@ function App() {
 
   // ---------------- Day goals ----------------
   const fetchWeekDayGoals = useCallback(async (weekStart) => {
-    const dayGoalsMap = {};
-    for (let i = 0; i < 7; i++) {
+   const dates = Array.from({ length: 7 }, (_, i) => {
       const date = new Date(weekStart);
       date.setDate(weekStart.getDate() + i);
-      const normalized = normalizeDate(date);
-      try {
-        const data = await getDayGoals(normalized);
-        dayGoalsMap[normalized] = Array.isArray(data) ? data : [];
-      } catch (err) {
-        console.error("Kon dagdoelen niet laden:", err);
-        dayGoalsMap[normalized] = [];
-      }
-    }
+      return normalizeDate(date);
+    });
+
+    const results = await Promise.all(dates.map(date => getDayGoals(date)));
+
+    const dayGoalsMap = {};
+    dates.forEach((date, i) => {
+      dayGoalsMap[date] = Array.isArray(results[i]) ? results[i] : [];
+    });
+
     setDayGoals(dayGoalsMap);
   }, []);
 
