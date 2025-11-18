@@ -51,6 +51,8 @@ function App() {
 
   const currentWeekKey = getCurrentWeekKey();
 
+  
+
   // 🟢 User login
   useEffect(() => {
     const fetchUser = async () => {
@@ -211,31 +213,28 @@ function App() {
 
   // 🔴 Supabase realtime listener voor dagdoelen
   useEffect(() => {
-    let isMounted = true;
-
-    // Maak de channel subscription
     const channel = supabase
-      .channel('public:day_goals') // unieke naam
+      .channel('day_goals_channel')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'day_goals' },
         (payload) => {
-          if (!isMounted) return; // voorkom update als component unmounted
+          // payload check
+          if (!payload) return;
 
-          const newGoal = payload.new;
-          const oldGoal = payload.old;
+          const { new: newGoal, old: oldGoal } = payload;
 
           setDayGoals(prev => {
             const copy = { ...prev };
 
-            // nieuwe goal toevoegen
-            if (newGoal?.date) {
+            // INSERT of UPDATE
+            if (newGoal && newGoal.date) {
               copy[newGoal.date] = [...(copy[newGoal.date] || []), newGoal];
             }
 
-            // oude goal verwijderen bij DELETE
-            if (oldGoal?.date) {
-              copy[oldGoal.date] = (copy[oldGoal.date] || []).filter(g => g.id !== oldGoal.id);
+            // DELETE
+            if (oldGoal && oldGoal.date && Array.isArray(copy[oldGoal.date])) {
+              copy[oldGoal.date] = copy[oldGoal.date].filter(g => g.id !== oldGoal.id);
             }
 
             return copy;
@@ -245,11 +244,10 @@ function App() {
       .subscribe();
 
     return () => {
-      isMounted = false;
-      // juiste unsubscribe methode in v2+
       supabase.removeChannel(channel);
     };
   }, []);
+
 
 
 
