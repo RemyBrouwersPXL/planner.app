@@ -40,6 +40,7 @@ function App() {
   };
 
   const [currentWeekStart, setCurrentWeekStart] = useState(() => getCurrentWeekStart());
+  const [modalType, setModalType] = useState(null); // 'day' of 'week'
   const [weekGoals, setWeekGoals] = useState([]);
   const [dayGoals, setDayGoals] = useState({});
   const [selectedDay, setSelectedDay] = useState(null);
@@ -296,7 +297,7 @@ function App() {
           weekGoals={weekGoals}
           onUpdateGoal={updateWeekGoalHandler}
           onDeleteGoal={deleteWeekGoalHandler}
-          openModal={() => { setModalEditGoal(null); setModalOpen(true); }}
+          openModal={() => { setModalEditGoal(null); setModalOpen(true); setModalType('week');}}
         />
 
         <DagPlanner
@@ -311,8 +312,11 @@ function App() {
           open={modalOpen}
           onClose={() => { setModalOpen(false); fetchWeekDayGoals(currentWeekStart);}}
           onSave={goal => {
-            if (selectedDay) addDayGoalHandler(goal, selectedDay);
-            else addWeekGoalHandler(goal);
+            if (modalType === 'day' && selectedDay) {
+              addDayGoalHandler(goal, selectedDay);
+            } else if (modalType === 'week') {
+              addWeekGoalHandler(goal);
+            }
             setModalOpen(false);
             fetchWeekDayGoals(currentWeekStart);
           }}
@@ -328,7 +332,7 @@ function App() {
           dayGoals={dayGoals[selectedDay] || []}
           toggleDayComplete={toggleDayComplete}
           onDeleteGoal={deleteDayGoalHandler}
-          openAddGoalModal={dayKey => { setSelectedDay(dayKey); setModalOpen(true); }}
+          openAddGoalModal={dayKey => { setSelectedDay(dayKey); setModalOpen(true); setModalType('day'); }}
           openEditGoalModal={goal => { setSelectedDay(goal.date); setModalEditGoal(goal); setModalOpen(true); }}
         />
       </Container>
