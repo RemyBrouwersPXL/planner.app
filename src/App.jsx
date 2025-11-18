@@ -160,7 +160,7 @@ function App() {
 
   /* ---------- Day goal handlers ---------- */
   const addDayGoalHandler = async (goal, date = selectedDay) => {
-    if (!date) return;
+  if (!date) return;
     const normalizedDate = normalizeDate(date);
     const toInsert = { ...goal, date: normalizedDate, completed: goal.completed ?? false };
 
@@ -170,12 +170,20 @@ function App() {
       const error = result?.error ?? null;
 
       if (error) throw error;
-      if (data) console.log("Dagdoel toegevoegd:", data);
-      // Geen setState nodig, realtime listener update
+
+      if (data) {
+        // direct toevoegen aan state zodat UI meteen update
+        setDayGoals(prev => {
+          const copy = { ...prev };
+          copy[normalizedDate] = [...(copy[normalizedDate] || []), ...(Array.isArray(data) ? data : [data])];
+          return copy;
+        });
+      }
     } catch (err) {
       console.error("addDayGoal failed:", err);
     }
   };
+
 
 
   const updateDayGoalHandler = async (id, updates) => {
