@@ -312,7 +312,7 @@ function App() {
 
         <Modal
           open={modalOpen}
-          onClose={() => { setModalOpen(false); fetchWeekDayGoals(currentWeekStart);}}
+          onClose={() => { setModalOpen(false); fetchWeekDayGoals(currentWeekStart); fetchWeekGoals}}
           onSave={goal => {
             if (modalType === 'day' && selectedDay) {
               addDayGoalHandler(goal, selectedDay); // voegt toe aan DB + state
