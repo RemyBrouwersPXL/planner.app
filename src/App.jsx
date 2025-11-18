@@ -322,7 +322,7 @@ function App() {
         <WeekPlanner
           weekGoals={weekGoals}
           onUpdateGoal={() => {updateWeekGoalHandler; fetchWeekGoals()}}
-          onDeleteGoal={() => {deleteWeekGoalHandler(goal.id); fetchWeekGoals()}}
+          onDeleteGoal={async() => {deleteWeekGoalHandler; await fetchWeekGoals()}}
           openModal={() => { setModalEditGoal(null); setModalType('week'); setModalOpen(true); }}
         />
 
