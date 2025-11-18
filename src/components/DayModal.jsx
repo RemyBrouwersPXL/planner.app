@@ -69,7 +69,7 @@ function DayModal({
             WebkitTextFillColor: "transparent",
           }}
         >
-          {dayKey}
+          {dayKey + 1}
         </Typography>
 
         <Stack spacing={2} mt={4}>
