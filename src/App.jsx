@@ -171,7 +171,9 @@ function App() {
       if (data) {
         setDayGoals(prev => {
           const copy = { ...prev };
-          copy[normalizedDate] = [...(copy[normalizedDate] || []), ...(Array.isArray(data) ? data : [data])];
+          const dayKey = normalizeDate(date);
+          if (!copy[dayKey]) copy[dayKey] = []; // maak de array aan als die nog niet bestaat
+          copy[dayKey] = [...copy[dayKey], ...(Array.isArray(data) ? data : [data])];
           return copy;
         });
       }
