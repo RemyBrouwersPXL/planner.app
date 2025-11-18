@@ -21,13 +21,7 @@ import {
 
 function App() {
 
-  const normalizeDate = (date) => {
-    if (!date) return null;
-    const d = new Date(date);
-    d.setHours(0,0,0,0); // lokale start van de dag
-    return d.toISOString().split("T")[0]; // YYYY-MM-DD
-  };
-
+  const normalizeDate = (date) => date ? new Date(date).toISOString().split("T")[0] : null;
 
   const getCurrentWeekKey = () => {
     const today = new Date();
@@ -86,27 +80,21 @@ function App() {
 
   // ---------------- Day goals ----------------
   const fetchWeekDayGoals = useCallback(async (weekStart) => {
-    try {
-      const dates = Array.from({ length: 7 }, (_, i) => {
-        const date = new Date(weekStart);
-        date.setDate(weekStart.getDate() + i);
-        date.setHours(0,0,0,0); // zorg dat tijd op 00:00 staat
-        return normalizeDate(date);
-      });
-
-      const results = await Promise.all(dates.map(date => getDayGoals(date)));
-
-      const dayGoalsMap = {};
-      dates.forEach((date, idx) => {
-        dayGoalsMap[date] = Array.isArray(results[idx]) ? results[idx] : [];
-      });
-
-      setDayGoals(dayGoalsMap);
-    } catch (err) {
-      console.error("Kon dagdoelen niet laden:", err);
+    const dayGoalsMap = {};
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(weekStart);
+      date.setDate(weekStart.getDate() + i);
+      const normalized = normalizeDate(date);
+      try {
+        const data = await getDayGoals(normalized);
+        dayGoalsMap[normalized] = Array.isArray(data) ? data : [];
+      } catch (err) {
+        console.error("Kon dagdoelen niet laden:", err);
+        dayGoalsMap[normalized] = [];
+      }
     }
+    setDayGoals(dayGoalsMap);
   }, []);
-
 
   // ---------------- Load week and day goals ----------------
   useEffect(() => {
@@ -321,11 +309,12 @@ function App() {
 
         <Modal
           open={modalOpen}
-          onClose={() => { setModalOpen(false); ;}}
+          onClose={() => { setModalOpen(false); fetchWeekDayGoals(currentWeekStart);}}
           onSave={goal => {
             if (selectedDay) addDayGoalHandler(goal, selectedDay);
             else addWeekGoalHandler(goal);
             setModalOpen(false);
+            fetchWeekDayGoals(currentWeekStart);
           }}
           editGoal={modalEditGoal}
         />
