@@ -23,6 +23,16 @@ function App() {
 
   const normalizeDate = (date) => date ? new Date(date).toISOString().split("T")[0] : null;
 
+  const getWeekKeyFromStart = (weekStartDate) => {
+  const year = weekStartDate.getFullYear();
+  const firstDay = new Date(year, 0, 1);
+  const days = Math.floor((weekStartDate - firstDay) / 86400000);
+  const weekNumber = Math.ceil((days + firstDay.getDay() + 1) / 7);
+
+  return `${year}-W${weekNumber}`;
+};
+
+
   const getCurrentWeekKey = () => {
     const today = new Date();
     const year = today.getFullYear();
@@ -51,7 +61,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const currentWeekKey = getCurrentWeekKey();
+  const currentWeekKey = getWeekKeyFromStart(currentWeekStart);
 
   // ---------------- User login ----------------
   useEffect(() => {
@@ -70,9 +80,9 @@ function App() {
   }, []);
 
   // ---------------- Week goals ----------------
-  const fetchWeekGoals = useCallback(async () => {
+  const fetchWeekGoals = useCallback(async (weekKey) => {
     try {
-      const data = await getWeekGoals(currentWeekKey);
+      const data = await getWeekGoals(weekKey);
       setWeekGoals(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Kon weekdoelen niet laden:", err);
@@ -101,9 +111,10 @@ function App() {
   // ---------------- Load week and day goals ----------------
   useEffect(() => {
     if (!user) return;
-    fetchWeekGoals();
+    const weekKey = getWeekKeyFromStart(currentWeekStart)
+    fetchWeekGoals(weekKey);
     fetchWeekDayGoals(currentWeekStart);
-  }, [currentWeekStart, fetchWeekGoals, fetchWeekDayGoals, user]);
+  }, [currentWeekStart, fetchWeekDayGoals, user]);
 
   // ---------------- Login handler ----------------
   const handleLogin = async () => {
