@@ -160,9 +160,12 @@ function App() {
 
   /* ---------- Day goal handlers ---------- */
   const addDayGoalHandler = async (goal, date = selectedDay) => {
-  if (!date) return;
+    if (!date) return;
     const normalizedDate = normalizeDate(date);
-    const toInsert = { ...goal, date: normalizedDate, completed: goal.completed ?? false };
+
+    // maak een kopie zonder id
+    const { id, ...goalWithoutId } = goal;
+    const toInsert = { ...goalWithoutId, date: normalizedDate, completed: goal.completed ?? false };
 
     try {
       const result = await addDayGoal(toInsert);
@@ -183,6 +186,7 @@ function App() {
       console.error("addDayGoal failed:", err);
     }
   };
+
 
 
 
