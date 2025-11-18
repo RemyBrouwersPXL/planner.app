@@ -11,8 +11,7 @@ function DagPlanner({ currentWeekStart, dayGoals, openDayModal, openModal, setSe
 
 
     // FIX: maak key via UTC zodat hij nooit verspringt
-    const key = date.toISOString().split("T")[0];
-
+    const key = date.toISOString().split("T")[0]; // locale date
 
 
     return {

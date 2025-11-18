@@ -20,8 +20,8 @@ import {
 } from './services/goalsService';
 
 function App() {
-  
 
+  const normalizeDate = (date) => date ? new Date(date).toISOString().split("T")[0] : null;
 
   const getCurrentWeekKey = () => {
     const today = new Date();
@@ -84,7 +84,7 @@ function App() {
     for (let i = 0; i < 7; i++) {
       const date = new Date(weekStart);
       date.setDate(weekStart.getDate() + i);
-      const normalized = new Date(date).toISOString().split("T")[0];
+      const normalized = normalizeDate(date);
       try {
         const data = await getDayGoals(normalized);
         dayGoalsMap[normalized] = Array.isArray(data) ? data : [];
@@ -158,7 +158,7 @@ function App() {
   // ---------------- Day goal handlers ----------------
   const addDayGoalHandler = async (goal, date = selectedDay) => {
     if (!date) return;
-    const dayKey = new Date(date).toISOString().split("T")[0];
+    const dayKey = normalizeDate(date);
     const { id, ...goalWithoutId } = goal;
     const toInsert = { ...goalWithoutId, date: dayKey, completed: goal.completed ?? false };
 
