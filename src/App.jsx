@@ -132,7 +132,7 @@ function App() {
       const { data, error } = await addWeekGoal(toInsert);
       if (error) throw error;
       setWeekGoals(prev => [...prev, ...(Array.isArray(data) ? data : [data])]);
-      fetchWeekGoals
+      await fetchWeekGoals();
     } catch (err) {
       console.error("addWeekGoal failed:", err);
     }
@@ -260,6 +260,30 @@ function App() {
     return () => supabase.removeChannel(channel);
   }, []);
 
+  useEffect(() => {
+    const channel = supabase
+      .channel('week_goals_channel')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'week_goals' },
+        async (payload) => {
+          const changedWeek = payload.new?.week_key || payload.old?.week_key;
+          if (!changedWeek) return;
+
+          try {
+            const data = await getWeekGoals(changedWeek);
+            setWeekGoals(Array.isArray(data) ? data : []);
+          } catch (err) {
+            console.error("Kon geen weekdoelen laden", err);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, []);
+
+
 
   // ---------------- Render ----------------
   return (
@@ -297,7 +321,7 @@ function App() {
 
         <WeekPlanner
           weekGoals={weekGoals}
-          onUpdateGoal={() => {updateWeekGoalHandler; fetchWeekGoals}}
+          onUpdateGoal={() => {updateWeekGoalHandler; fetchWeekGoals()}}
           onDeleteGoal={deleteWeekGoalHandler}
           openModal={() => { setModalEditGoal(null); setModalOpen(true); }}
         />
@@ -312,15 +336,17 @@ function App() {
 
         <Modal
           open={modalOpen}
-          onClose={() => { setModalOpen(false); fetchWeekDayGoals(currentWeekStart); fetchWeekGoals}}
-          onSave={goal => {
+          onClose={() => { setModalOpen(false); fetchWeekDayGoals(currentWeekStart); fetchWeekGoals()}}
+          onSave={async (goal) => {
             if (modalType === 'day' && selectedDay) {
-              addDayGoalHandler(goal, selectedDay); // voegt toe aan DB + state
+              await addDayGoalHandler(goal, selectedDay);
             } else if (modalType === 'week') {
-              addWeekGoalHandler(goal);
+              await addWeekGoalHandler(goal);
             }
             setModalOpen(false);
           }}
+
+            
           editGoal={modalEditGoal}
         />
 
