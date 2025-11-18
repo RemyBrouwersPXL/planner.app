@@ -297,7 +297,7 @@ function App() {
           weekGoals={weekGoals}
           onUpdateGoal={updateWeekGoalHandler}
           onDeleteGoal={deleteWeekGoalHandler}
-          openModal={() => { setModalEditGoal(null); setModalOpen(true); setModalType('week');}}
+          openModal={() => { setModalEditGoal(null); setModalType('week'); setModalOpen(true);}}
         />
 
         <DagPlanner
@@ -318,7 +318,6 @@ function App() {
               addWeekGoalHandler(goal);
             }
             setModalOpen(false);
-            fetchWeekDayGoals(currentWeekStart);
           }}
           editGoal={modalEditGoal}
         />
@@ -332,7 +331,7 @@ function App() {
           dayGoals={dayGoals[selectedDay] || []}
           toggleDayComplete={toggleDayComplete}
           onDeleteGoal={deleteDayGoalHandler}
-          openAddGoalModal={dayKey => { setSelectedDay(dayKey); setModalOpen(true); setModalType('day'); }}
+          openAddGoalModal={dayKey => { setSelectedDay(dayKey); setModalType('day'); setModalOpen(true);}}
           openEditGoalModal={goal => { setSelectedDay(goal.date); setModalEditGoal(goal); setModalOpen(true); }}
         />
       </Container>
