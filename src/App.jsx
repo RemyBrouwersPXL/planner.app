@@ -119,8 +119,7 @@ function App() {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (!user) return <Login onLogin={handleLogin} />;
+ 
 
   // 🗓 Week navigatie
   const previousWeek = () => setCurrentWeekStart(prev => new Date(prev.setDate(prev.getDate() - 7)));
@@ -245,6 +244,16 @@ function App() {
         body: { overflowX: "hidden", background: "linear-gradient(45deg, #FC466B, #3F5EFB)", height: "100%", fontFamily: "'Montserrat', sans-serif", minHeight: "100vh", margin: 0, backgroundAttachment: "fixed" },
         "#root": { height: "100%", minHeight: "100vh", display: "flex", flexDirection: "column" }
       }} />
+
+      {loading ? (
+      <div>Loading...</div>
+    ) : !user ? (
+      <Login onLogin={handleLogin} />
+    ) : (
+      <>
+        {/* jouw volledige UI */}
+      </>
+    )}
 
       <Container sx={{
         flex: 1, minHeight: "100vh", py: 4, display: "flex", flexDirection: "column", justifyContent: "flex-start",
