@@ -321,12 +321,11 @@ function App() {
 
         <Modal
           open={modalOpen}
-          onClose={() => { setModalOpen(false); fetchWeekDayGoals(currentWeekStart);}}
+          onClose={() => { setModalOpen(false); ;}}
           onSave={goal => {
             if (selectedDay) addDayGoalHandler(goal, selectedDay);
             else addWeekGoalHandler(goal);
             setModalOpen(false);
-            fetchWeekDayGoals(currentWeekStart);
           }}
           editGoal={modalEditGoal}
         />
