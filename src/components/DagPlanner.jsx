@@ -8,12 +8,12 @@ function DagPlanner({ currentWeekStart, dayGoals, openDayModal, openModal, setSe
     const date = new Date(currentWeekStart);
     date.setDate(date.getDate() + i);
 
+
+
     // FIX: maak key via UTC zodat hij nooit verspringt
-    const key = new Date(Date.UTC(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate()
-  )).toISOString().split("T")[0];
+    const key = date.toISOString().split("T")[0];
+
+
 
     return {
       key,
