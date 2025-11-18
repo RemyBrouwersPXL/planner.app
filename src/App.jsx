@@ -165,13 +165,18 @@ function App() {
     const toInsert = { ...goal, date: normalizedDate, completed: goal.completed ?? false };
 
     try {
-      const { data, error } = await addDayGoal(toInsert);
+      const result = await addDayGoal(toInsert);
+      const data = result?.data ?? null;
+      const error = result?.error ?? null;
+
       if (error) throw error;
-      // Geen interval nodig, realtime listener doet update
+      if (data) console.log("Dagdoel toegevoegd:", data);
+      // Geen setState nodig, realtime listener update
     } catch (err) {
       console.error("addDayGoal failed:", err);
     }
   };
+
 
   const updateDayGoalHandler = async (id, updates) => {
     try {
