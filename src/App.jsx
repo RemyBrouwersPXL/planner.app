@@ -21,7 +21,15 @@ import {
 
 function App() {
 
-  const normalizeDate = (date) => date ? new Date(date).toISOString().split("T")[0] : null;
+ const normalizeDate = (date) => {
+  if (!date) return null;
+  const d = new Date(date);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 
   const getCurrentWeekKey = () => {
     const today = new Date();
