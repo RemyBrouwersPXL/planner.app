@@ -69,7 +69,7 @@ function DayModal({
             WebkitTextFillColor: "transparent",
           }}
         >
-          {new Date(dayKey + "T00:00").toLocaleDateString("nl-NL", { weekday: 'long', day: 'numeric', month: 'numeric' })} 
+          {dayKey + 1}
         </Typography>
 
         <Stack spacing={2} mt={4}>
