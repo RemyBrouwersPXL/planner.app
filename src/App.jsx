@@ -163,7 +163,6 @@ function App() {
     if (!date) return;
     const normalizedDate = normalizeDate(date);
 
-    // maak een kopie zonder id
     const { id, ...goalWithoutId } = goal;
     const toInsert = { ...goalWithoutId, date: normalizedDate, completed: goal.completed ?? false };
 
@@ -175,7 +174,7 @@ function App() {
       if (error) throw error;
 
       if (data) {
-        // direct toevoegen aan state zodat UI meteen update
+        // voeg toe aan lokale state zodat het UI meteen updatet
         setDayGoals(prev => {
           const copy = { ...prev };
           copy[normalizedDate] = [...(copy[normalizedDate] || []), ...(Array.isArray(data) ? data : [data])];
@@ -186,6 +185,7 @@ function App() {
       console.error("addDayGoal failed:", err);
     }
   };
+
 
 
 
