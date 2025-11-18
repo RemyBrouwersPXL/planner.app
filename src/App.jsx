@@ -216,31 +216,36 @@ function App() {
     const channel = supabase
       .channel('day_goals_channel')
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'day_goals' },
-        (payload) => {
-          // payload check
-          if (!payload) return;
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'day_goals' },
+          (payload) => {
+            const { eventType, new: newGoal, old: oldGoal } = payload;
 
-          const { new: newGoal, old: oldGoal } = payload;
+            setDayGoals(prev => {
+              const copy = { ...prev };
 
-          setDayGoals(prev => {
-            const copy = { ...prev };
+              // INSERT
+              if (eventType === "INSERT" && newGoal?.date) {
+                copy[newGoal.date] = [...(copy[newGoal.date] || []), newGoal];
+              }
 
-            // INSERT of UPDATE
-            if (newGoal && newGoal.date) {
-              copy[newGoal.date] = [...(copy[newGoal.date] || []), newGoal];
-            }
+              // UPDATE
+              if (eventType === "UPDATE" && newGoal?.date) {
+                copy[newGoal.date] = (copy[newGoal.date] || []).map(g =>
+                  g.id === newGoal.id ? newGoal : g
+                );
+              }
 
-            // DELETE
-            if (oldGoal && oldGoal.date && Array.isArray(copy[oldGoal.date])) {
-              copy[oldGoal.date] = copy[oldGoal.date].filter(g => g.id !== oldGoal.id);
-            }
+              // DELETE
+              if (eventType === "DELETE" && oldGoal?.date) {
+                copy[oldGoal.date] = (copy[oldGoal.date] || []).filter(g => g.id !== oldGoal.id);
+              }
 
-            return copy;
-          });
-        }
-      )
+              return copy;
+            });
+          }
+        )
+
       .subscribe();
 
     return () => {
