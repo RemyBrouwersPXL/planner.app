@@ -321,15 +321,16 @@ function App() {
 
         <WeekPlanner
           weekGoals={weekGoals}
+          onAddWeekGoal={addWeekGoal}
           onUpdateGoal={() => {updateWeekGoalHandler; fetchWeekGoals()}}
           onDeleteGoal={deleteWeekGoalHandler}
-          openModal={() => { setModalEditGoal(null); setModalOpen(true); }}
+          openModal={() => { setModalEditGoal(null); setModalType('week'); setModalOpen(true); }}
         />
 
         <DagPlanner
           currentWeekStart={currentWeekStart}
           dayGoals={dayGoals}
-          openDayModal={dayKey => { setSelectedDay(dayKey); setModalType('week'); setDayModalOpen(true); }}
+          openDayModal={dayKey => { setSelectedDay(dayKey); setDayModalOpen(true); }}
           openModal={goal => { setSelectedDay(goal.date); setModalEditGoal(goal); setModalOpen(true); }}
           setSelectedDay={setSelectedDay}
         />
