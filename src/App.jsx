@@ -228,18 +228,24 @@ function App() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'day_goals' },
-        (payload) => {
+        async (payload) => {
           const changedDate = payload.new?.date || payload.old?.date;
           if (!changedDate) return;
-          fetchDayGoals(changedDate);
+
+          // Alleen die dag ophalen en updaten
+          try {
+            const data = await getDayGoals(changedDate);
+            setDayGoals(prev => ({ ...prev, [changedDate]: Array.isArray(data) ? data : [] }));
+          } catch (err) {
+            console.error("Kon dagdoelen niet laden (realtime):", err);
+          }
         }
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [fetchDayGoals]);
+    return () => supabase.removeChannel(channel);
+  }, []);
+
 
   // ---------------- Render ----------------
   return (
