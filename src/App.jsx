@@ -20,8 +20,9 @@ import {
 } from './services/goalsService';
 
 function App() {
-  const newDate = new Date();
+  const newDate = new Date(date);
   const normalizeDate = (date) => date ? `${newDate.getFullYear()}-${String(newDate.getMonth()+1).padStart(2,'0')}-${String(newDate.getDate()).padStart(2,'0')}` : null; 
+
 
   const getWeekKeyFromStart = (weekStartDate) => {
   const year = weekStartDate.getFullYear();
