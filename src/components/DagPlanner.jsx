@@ -63,7 +63,7 @@ function DagPlanner({ currentWeekStart, dayGoals, openDayModal, openModal, setSe
           
           <Grid key={day.key} item xs={12} sm={6} md={3}>
             <Card 
-              sm={{
+              sx={{
                 p: 2,
                 alignItems: "stretch",
                 Height: "100%",
