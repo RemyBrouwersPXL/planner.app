@@ -26,7 +26,7 @@ function DagPlanner({ currentWeekStart, dayGoals, openDayModal, openModal, setSe
     };
   });
 
-  const today = new Date().getDay();
+  const todayKey = new Date().toISOString().split("T")[0];
 
   const priorityColor = (priority) => {
     switch (priority) {
@@ -72,8 +72,8 @@ function DagPlanner({ currentWeekStart, dayGoals, openDayModal, openModal, setSe
                 backdropFilter: "blur(10px)",
                 transition: "transform 0.3s ease, box-shadow 0.3s ease",
 
-                border: today === day.dayint ? "3px solid #6C63FF" : "3px solid transparent",
-                boxShadow: today === day.dayint ? "0 0 20px #6C63FF" : "0 8px 32px rgba(0,0,0,0.3)",
+                border: day.key === todayKey ? "3px solid #6C63FF" : "3px solid transparent",
+                boxShadow: day.key === todayKey ? "0 0 20px #6C63FF" : "0 8px 32px rgba(0,0,0,0.3)",
 
                 "&:hover": {
                   transform: "scale(1.03)",
