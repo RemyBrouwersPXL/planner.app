@@ -12,9 +12,11 @@ function DagPlanner({ currentWeekStart, dayGoals, openDayModal, openModal, setSe
 
     // FIX: maak key via UTC zodat hij nooit verspringt
     const key = date.toISOString().split("T")[0]; // locale date
+    const dayint = date.getDay();
 
 
     return {
+      dayint,
       key,
       label: date.toLocaleDateString("nl-NL", {
         weekday: "long",
@@ -23,6 +25,8 @@ function DagPlanner({ currentWeekStart, dayGoals, openDayModal, openModal, setSe
       }),
     };
   });
+
+  const today = new Date().getDay();
 
   const priorityColor = (priority) => {
     switch (priority) {
@@ -52,10 +56,13 @@ function DagPlanner({ currentWeekStart, dayGoals, openDayModal, openModal, setSe
         Dagplanner
       </Typography>
 
+      
+
       <Grid container spacing={2} justifyContent="center" alignItems="stretch">
         {days.map((day) => (
+          
           <Grid key={day.key} item xs={12} sm={6} md={3}>
-            <Card
+            <Card 
               sm={{
                 p: 2,
                 alignItems: "stretch",
@@ -65,6 +72,10 @@ function DagPlanner({ currentWeekStart, dayGoals, openDayModal, openModal, setSe
                 backdropFilter: "blur(10px)",
                 boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
                 transition: "transform 0.3s ease, box-shadow 0.3s ease",
+
+                border: today === day.dayint ? "3px solid #6C63FF" : "3px solid transparent",
+                boxShadow: today === day.dayint ? "0 0 20px #6C63FF" : "0 8px 32px rgba(0,0,0,0.3)",
+
                 "&:hover": {
                   transform: "scale(1.03)",
                   boxShadow: "0 0 20px #6C63FF",
@@ -81,12 +92,18 @@ function DagPlanner({ currentWeekStart, dayGoals, openDayModal, openModal, setSe
                 
                 {
                 ((dayGoals[day.key] || []).map(goal =>
+                  
                   <Card
                     key={goal.id}
                     onClick={(e) => {
                         e.stopPropagation(); 
                         openModal(goal);
-                      }}
+                    }}
+
+                    
+
+                    
+
 
                     sx={{
                       mb: 2,
